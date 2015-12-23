@@ -1,6 +1,6 @@
 (define (make-ui-obj x y surface)
   ; METHODS ;
-  (define (draw dest)
+  (define (draw dest ev)
     (sdl2:blit-surface! surface #f dest (rect?)))
 
   ; ACCESSORS ;

@@ -1,3 +1,9 @@
-## Activity ##
-- An activity is a procedure of the form (*-activity window)
-- It returns either: a procedure which will succeed it; or nil, in which case the program should quit. actually idk
+## TODO ##
+- sdl2event must be passed to the instance draw procedures
+- how do we do subclassing, so that (draw) is like an abstract method and the dispatcher can adhere to DRY
+- Do x,y,surface need to be publicly accessible? Because if not, they don't even ..
+
+
+
+(make-simple-button x y surface onpress)
+(make-
