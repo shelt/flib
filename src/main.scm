@@ -4,8 +4,11 @@
      (prefix sdl2-image img:)
      miscmacros)
 
+(load "util.scm")
+(load "const.scm")
 (load "objects/ui-obj.scm")
 (load "activities/splash-activity.scm")
+(load "activities/mainmenu-activity.scm")
 
 (printf "## Autocracy v0.1a ##")
 (printf "Running with SDL ~A~N" (sdl2:current-version))
@@ -33,7 +36,6 @@
    800  600                             ; w, h
    '(resizable fullscreen-desktop borderless)))                 ; flags
 
-(define bgcolor (sdl2:make-color 241 241 241))
 
-(splash-activity window bgcolor)
-;(mainmenu-activity window bgcolor) TODO
+(splash-activity window)
+(mainmenu-activity window)

@@ -1,3 +1,0 @@
-(define activity-splash
-  (lambda ()
-    

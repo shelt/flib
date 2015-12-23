@@ -1,0 +1,3 @@
+## Activity ##
+- An activity is a procedure of the form (*-activity window)
+- It returns either: a procedure which will succeed it; or nil, in which case the program should quit. actually idk
