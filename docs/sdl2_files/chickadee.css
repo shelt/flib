@@ -1,0 +1,725 @@
+/* Disabled box-shadow on #contents and dl.defsig due to
+   performance problems on mobile (and tackiness). */
+html { font-size: 100%; }
+body {
+  font-family: "Georgia", "Times New Roman", serif;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+}
+
+ul, ol { margin: 1em 0; padding: 0 0 0 40px; } /* fix IE 6,7 bullets */
+pre, code, kbd, samp, tt { 
+ font-family: monospace, monospace; 
+ _font-family: 'courier new', monospace;
+ font-size: 0.875em;
+}
+
+pre {
+  padding: 0.2em 0 0.2em 1em;
+  margin: 1em 0 1em 0.3em;
+  border-left: 3px double black;
+/*  background-color: #f4f4f4; */
+}
+input { background-color: #ffffff; }
+
+#main {
+  padding-left: 1em;
+  padding-right: 1em;
+  margin-top: 0.5em;
+}
+#main ul {
+  list-style-type: circle;
+}
+
+#contents {
+  margin: 2em 10px 1em 0.5em;
+  overflow: hidden;
+  border: 1px solid #000;
+  background-color: white;
+/*  -moz-box-shadow: -5px 3px 5px #ddd; */   /* mozilla hack to prevent right overflow */
+/*  -moz-box-shadow: 0px 1px 10px #aaa; 
+  -webkit-box-shadow: 0px 1px 10px #aaa;
+  box-shadow: 0px 1px 10px #aaa; */
+}
+#contents { 
+  float: none; width: auto; 
+  margin-left: 0.5em; 
+  border-left: 2px solid #000;
+  -webkit-border-radius: 0 0 5px 0;
+  -moz-border-radius: 0 0 5px 0;
+  border-radius: 0 0 5px 0;
+}
+#contents.sidebar {
+  float: right; width: 20%;
+  margin-left: 1.0em;
+  border-left: 1px solid #000;
+  -webkit-border-radius: 0 0 0 5px;
+  -moz-border-radius: 0 0 0 5px;
+  border-radius: 0 0 0 5px;
+}
+
+#contents h2 {
+  text-transform: lowercase;
+  background-color: #444;
+  color: #fff;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: normal;
+  margin: 0;
+  border: none;
+  line-height: 1em;
+  padding: 0.25em 0.25em 0.25em 0.5em;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+}
+#toc {
+  overflow: hidden;
+  zoom: 1;
+  border: 1px solid #000;
+  border-left: 2px solid #000;
+  -moz-border-radius-bottomright: 5px;
+  -webkit-border-bottom-right-right: 5px;
+  border-bottom-right-radius: 5px;
+  background-color: #fdfdfe;
+}
+#toc h2 {
+  text-transform: lowercase;
+  background-color: #444;
+  color: #fff;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: normal;
+  margin: 0;
+  border: none;
+  line-height: 1em;
+  padding: 0.25em 0.25em 0.25em 0.5em;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+/*  border-bottom: 1px solid #000; */
+}
+#toc ul {
+  list-style-type: none;
+  font-size: 14px;
+  line-height: 1.3em;
+  margin: 0; padding: 0;
+  padding-left: 1.5em;
+  text-transform: lowercase;
+}
+.js #toc ul.toc {    /* want #toc > ul but not compat w/IE6 */
+  display: none;
+}
+#toc ul.toc {
+  padding-left: 0.5em;
+}
+#toc ul li {
+  margin: 0;
+}
+#toc ul li a {
+  border: none; font-weight: normal; font-style: italic;
+  color: #000;
+}
+
+dt {
+  font-weight: bold;
+}
+
+dl.defsig {
+  border: 1px solid black;
+  border-left: 3px solid black;
+/*  border-right: 3px double black; */
+  border-color: black;
+  margin-left: 1em;
+/*  margin-right: 1em; */
+  -moz-border-radius-bottomright: 5px;
+  -webkit-border-bottom-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+/*  -webkit-box-shadow: #bbb 0px 1px 1px;
+  -moz-box-shadow: #bbb 0px 2px 5px;
+  box-shadow: #bbb 0px 2px 5px; */
+}
+
+dt.defsig {
+  padding: 0.2em 1.0em;
+  background-color: #444;
+  color: #fff;
+  border-bottom: 1px solid black;
+  font-weight: normal;
+  margin: 0;
+  font-size: 1em;
+}
+
+dt.defsig {
+  /* Both child elements are floating, so we introduce a new
+     block context so they are encapsulated. */
+  overflow: hidden;
+  zoom: 1;
+  min-height: 0;
+}
+#main dt.defsig a, #main dt.defsig a:hover {
+  /* avoid inherit & use #main to placate IE6/7 */
+  /* font-style: inherit !important; */
+  /* color: inherit !important; */
+  font-style: normal;  
+  color: #fff;
+}
+dt.defsig a:hover tt {
+  border-bottom: 1px solid #fff !important;
+}
+
+dt.defsig span.type {
+  float: right;
+  color: #eee;
+  font-size: 0.9375em;
+  font-style: italic;
+  font-weight: normal;
+/*  border-left: 3px double black; */
+}
+dt.defsig span.sig {
+/* monospace already set via tt */
+  float: left;
+}
+
+/* dt.defsig span.sig tt {
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 16px;
+    letter-spacing: 0.05em;
+} */
+
+.operator {
+  color: #800000;
+}
+
+/* I want to change the margin-top to padding-top but
+   paragraph margins will use the padding as a baseline;
+   if margin & padding is 0, then tables are not offset */
+dd.defsig {
+  padding-left: 1em;
+  padding-right: 1em;
+  margin: 0;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  background-color: #ffffff;
+}
+
+h2 {
+/*  border-top: 1px solid black; */
+  border-bottom: 3px double black;
+}
+
+h3 {
+  border-bottom: 1px solid #808080;
+}
+
+/* section links */
+#main h1 a, #main h2 a, #main h3 a, #main h4 a, #main h5 a, #main h6 a {
+    font-style: normal;     /* avoid inherit to placate IE6/7 */
+    color: #000;
+}
+#main h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover, h6 a:hover {
+    background-color: #000;
+    color: #fff;
+}
+/* end section links */
+
+hr {
+  border: 1px solid black;
+}
+
+table {
+  border: 1px solid black;
+  border-collapse: collapse;
+/*  margin-left: auto;
+  margin-right: auto;
+*/
+  margin-left: 2em;
+  margin-right: 2em;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+th {
+  text-align: left;
+  padding-left: 1em;
+  padding-right: 1em;
+  font-weight: bold;
+  border: 1px solid black;
+}
+td {
+  border: 1px solid black;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+dl {
+  margin-left: 1em;
+}
+dt {
+  margin-top: 0.2em;
+}
+
+a {
+  text-decoration: none;
+  color: #000;
+}
+
+a:hover {
+  color: #fff;
+  background-color: #000;
+}
+
+#main a {
+  color: #224;
+  border-bottom: 1px solid #889;
+  font-style: italic;
+}
+#main a:hover {
+  color: #fff;
+  background-color: #002;
+}
+
+#hdr h1 {
+  font-size: 1em;
+  padding-left: 0.3em;
+  background-color: #ffffff;
+  margin-bottom: 0;
+  margin-top: 0;
+  float: left;
+}
+#hdr h5 {
+  display: none;
+}
+#hdr {
+  /* BFC set elsewhere */
+  border-bottom: 3px double black;
+  /* box-shadow: #bbb 0px 1px 5px;  // desired box shadow, but right overflow issues */
+  -webkit-box-shadow: #bbb -3px 1px 3px;  /* moz hack to prevent right overflow */
+  -moz-box-shadow: #bbb -3px 1px 3px;  /* moz hack to prevent right overflow */
+  box-shadow: #bbb -3px 1px 3px;
+}
+
+h1 a {
+  border: none;
+  font-weight: bold;
+  font-style: italic;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+}
+
+#main td.match-path {
+  /* text-align: right; */
+}
+
+#main td.match-path a, ul.contents-list a {
+  border: none;
+  font-weight: normal;
+  font-style: italic;
+}
+
+td.match-sig {
+  padding: 0;
+}
+#main td.match-sig a {
+  display: block;
+  text-decoration: none;
+  border: none;
+  padding-left: 1em;
+  padding-right: 1em;
+  font-weight: normal;
+  font-style: normal;
+}
+td.match-sig tt {
+/*  font-size: 14px; */
+}
+
+.js #contents {
+ display: none;  /* unhide later */
+ margin-top: 0.5em;
+}
+
+#contents ul.contents-list {
+ float: left;
+ *width: 100%;        /* IE7: explicit width so float children can use % width */
+}
+.js #contents ul.contents-list {
+ display: none;
+}
+#contents ul.contents-list li { 
+ float: left;
+ width: 25%;          /* ok for 800x600 */
+ *width: 24.75%;      /* IE7: avoid width overage */
+ border: none;
+ border-top: 1px solid #e8e8e8;  /* longer lines need lighter value; also -bottom looks terrible */
+}
+
+.csscolumns #contents ul.contents-list {
+ float: none;
+ -webkit-column-width: 12em;
+ -webkit-column-rule: 1px solid black;
+ -webkit-column-gap: 1px; /* defeat disappearing rule */
+ -moz-column-width: 12em;
+ -moz-column-rule: 1px solid black;
+ -moz-column-gap: 1px;  /* defeat border overlapping rule */
+}
+.csscolumns #contents ul.contents-list li {
+ float: none;
+ width: 100%;
+/* display: inline-block; */  /* fix webkit margin wrapping; slows down firefox */
+ -webkit-column-break-inside: avoid; /* alternate webkit fix */
+ border: none;
+ border-top: 1px solid #e8e8e8;
+}
+
+#contents.sidebar ul.contents-list {
+ float: none;
+}
+.js #contents.sidebar ul.contents-list {
+ display: block;  /* move this to @media? */
+}
+#contents.sidebar ul.contents-list li {
+ float: none;
+ width: auto;
+ border: none;
+ border-top: 1px solid #e8e8e8;
+}
+.csscolumns #contents.sidebar ul.contents-list li {  /* not sure if safe when no-csscolumns */
+  width: 100%;
+  display: inline-block;
+}
+
+ul.contents-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  font-size: 14px;
+}
+ul.contents-list li {
+  padding: 0;
+  margin: 0;
+  line-height: 1em;
+}
+/* ul.contents-list li:first-child { */
+/*   border-top: none; */
+/* } */
+ul.contents-list li a {
+  display: block;
+  padding: 0.25em 0.5em;
+  color: #000;
+}
+ul.contents-list li a:hover {
+  color: #fff;
+  background-color: #222;
+}
+
+/* Introduce a new "Block formatting context" (9.4.1) 
+   for each of these block elements by setting
+   overflow to anything other than visible.  This
+   allows blocks to flow around floats.  Certain
+   elts, such as table cells, get a BFC automatically. */
+#main dl, #main ul, #main ol,
+#main h1, #main h2, #main h3,
+#main h4, #main h5, #main h6,
+#hdr {
+  overflow: hidden;
+  /* Also set hasLayout in IE6 and IE7 */
+  zoom: 1;
+  min-height: 0;
+}
+/* New BFC for pre but allow horiz. scrollbar
+   to appear rather than truncating content. */
+#main pre {
+  overflow: auto;
+}
+/* PRE wrapping rather than overflow. */
+#main pre {
+  white-space: pre-wrap; /* CSS3 */
+  white-space: -moz-pre-wrap !important; /* Mozilla, since 1999 */
+  white-space: -pre-wrap; /* Opera 4-6 */
+  white-space: -o-pre-wrap; /* Opera 7 */
+  word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+
+ul li {
+  margin-bottom: 3px;  /* > 0 helps avoid cutoff of bottom link border */
+}
+
+form.lookup input.text, div.incsearch {
+  width: 50%;
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 16px;
+  border: 1px solid #888888;
+  padding-left: 0.2em; padding-right: 0.2em;
+/*  padding: 2px; */   /* make up for 3px border on buttons */
+}
+form.lookup input.text:focus {
+  outline: none;
+  border: 1px solid black;
+}
+#searchbox {
+  width: 75%;
+  max-width: 45em;
+  margin-bottom: 1em;
+  float: left;
+}
+form.lookup { overflow: hidden; zoom: 1; min-height: 0; }
+
+div.buttons {
+  float: left;
+  margin-left: 0.5em;
+  width: 5em;
+}
+form.lookup input.button:focus {
+/*  outline: 1px solid #888888; */
+  border: 1px solid black;
+  outline: none;
+  background-color: #f4f4f4;
+}
+input.button {
+  font-family: "Georgia", "Times New Roman", serif;
+  cursor: pointer;
+}
+form.lookup input.button {
+  font-size: 0.875em;
+/*  font-size: 16px;*/
+  border: 1px solid #888888;
+  background-color: #fcfcfc;
+  margin-left: 0.2em;
+  width: 100%; /* inside div */
+  margin-bottom: 0.2em;
+}
+
+#hdr-lookup {
+    float: right;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    margin-right: 10px;
+}
+#hdr-searchbox {
+    padding: 0 0.2em;
+    margin: 0;
+    border: 0;      /* not none -- fixes border in IE6 */
+    font-size: 13px;
+    font-family: "Georgia", "Times New Roman", serif;
+    width: 18em;
+    outline: none;
+    -webkit-appearance: none;
+}
+#hdr-searchbox-incsearch {
+    font-size: 13px;
+}
+#hdr-submit {
+/*    float: right; */
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    background-image: url('mag.png?d25a9700'); /* manual cache bust */
+    background-position: center center;
+    background-repeat: no-repeat;
+    margin-left: 2px;
+    margin-right: 3px;
+/*    margin-right: 0.5em; */   /* matches left indent */
+    width: 12px;
+    height: 13px;
+    outline: none;
+/*    border: none;
+    border-left: 1px solid #888888; */
+}
+#hdr-submit:focus {
+    outline: 1px dotted #888888;
+}
+
+#navskip {
+  display: none;
+}
+
+div.incsearch {
+  border: 1px solid #000000;
+  overflow: hidden;
+  zoom: 1;
+  min-height: 0;
+  padding: 0;
+  position: absolute;
+  display: none;
+  background-color: #ffffff;
+  cursor: default;
+  -webkit-box-shadow: 0px 1px 3px #bbb;
+  -moz-box-shadow: 0px 1px 3px #bbb;
+  box-shadow: 0px 1px 3px #bbb;
+}
+
+div.incsearch ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+div.incsearch ul li {
+  margin: 0;
+  padding: 0 0.5em;
+}
+div.incsearch li.hover {
+  /* IE6 doesn't support :hover on non-A. */
+  background-color: #bbbbbb;
+}
+
+/* -- Highlighting */
+.colorize i {
+  font-style: normal;
+}
+.colorize .symbol,
+.prettyprint .kwd, .prettyprint .tag {
+  font-weight: bold;
+  color: #666;
+}
+.colorize .comment,
+.prettyprint .com {
+  color: #778;
+  font-style: italic;
+}
+.colorize .string, .colorize .character,
+.prettyprint .str, .prettyprint .atv {
+  color: #666;
+}
+.colorize .default,
+.prettyprint .pln, .prettyprint .fun {
+  color: #000;
+}
+.colorize .paren1, .colorize .paren2,
+.colorize .paren3, .colorize .paren4,
+.colorize .paren5, .colorize .paren6,
+.prettyprint .opn, .prettyprint .clo {
+  color: #99a;
+}
+.prettyprint .typ { color: #444; font-weight: bold }
+.colorize .special, .prettyprint .atn,
+.prettyprint .dec, .prettyprint .var { color: #444; }
+.prettyprint .lit { color: #357; }
+.prettyprint .pun { color: #383840; }
+
+
+@media only screen and (max-device-width: 480px) {
+    html { -webkit-text-size-adjust: none; }
+}
+
+@media screen and (min-width: 1901px) {
+    #contents ul.contents-list li {
+      width: 12.5%; *width: 12.47%;
+    }
+}
+
+@media screen and (max-width: 1900px) {
+    #contents ul.contents-list li {
+      width: 12.5%; *width: 12.47%;
+    }
+}
+
+@media screen and (max-width: 1600px) {
+    #contents ul.contents-list li {
+      width: 14.28572857%; *width: 14.25%;
+    }
+}
+
+@media screen and (max-width: 1280px) {
+    #contents ul.contents-list li {
+      width: 16.666666%; *width: 16.6%;
+    }
+}
+
+
+@media screen and (max-width: 1024px) {
+    #contents ul.contents-list li {
+      width: 20%; *width: 19.9%;
+    }
+}
+
+@media screen and (max-width: 800px) {
+    #contents ul.contents-list li {
+      width: 25%; *width: 24.9%;
+    }
+}
+
+
+@media screen and (max-width: 640px) {
+    .js #contents.sidebar ul.contents-list { 
+	display: none;  /* reset toggle */
+    }
+    .no-js ul.contents-list {
+        /* Don't collapse for non-JS.  Can be obtrusive, would probably look better at bottom. */
+        display: block;
+    }
+    #contents.sidebar {    /* dup #contents, moving sidebar to middle */
+	float: none; width: auto; 
+	margin-left: 0.5em; 
+	border-left: 2px solid #000;
+	-webkit-border-radius: 0 0 5px 0;
+	-moz-border-radius: 0 0 5px 0;
+	border-radius: 0 0 5px 0;
+    }
+    #contents.sidebar ul.contents-list li {   /* dup #contents ul li */
+	float: left;
+	border: none;
+	border-top: 1px solid #e8e8e8;
+    }
+    #contents.sidebar ul.contents-list li,
+    #contents ul.contents-list li {
+	width: 33.3333333333%; /* override larger @media */
+	*width: 33%;
+    }
+    #hdr-lookup {
+	border-top: 1px solid black;   /* stupid hack */
+    }
+    #searchbox {
+	width: 75%;
+    }
+    div.buttons { width: 5em; font-size: 0.875em; }
+    dt.defsig { font-size: 0.875em; }
+    dl.defsig span.sig tt { font-size: inherit; }
+    dl.defsig { margin-left: 0; }
+    pre { margin-right: 0; 
+	  margin-left: -0.75em;
+	  padding: 0.2em 0em 0.2em 0.5em;
+	  border-left-color: #666;  /* claustrophobia */
+	  -webkit-box-sizing: border-box;
+	  letter-spacing: -1px;     /* Important for <=480px, but may be too squished for 600px */
+    }
+    table { margin-left: 0; margin-right: 0; }
+}
+
+@media screen and (max-width: 440px) {
+    #contents ul.contents-list li,
+    #contents.sidebar ul.contents-list li { 
+	width: 50%; *width: 49.9%;
+    }
+    .csscolumns #contents ul.contents-list {
+	-webkit-columns: 10em;  /* std 12em yields only 1 col here */
+	-moz-columns: 10em;
+	columns: 10em;
+    }
+    #searchbox, div.incsearch {
+	font-size: 0.875em;
+    }
+    form.lookup input.button {
+	min-height: 2em;
+    }
+    h3 { font-size: 1em; }   /* useful, but what about h4-h6? */
+    #hdr h1 { font-size: 0.875em; }
+    div.buttons { width: 5em; font-size: 0.750em; }
+    dt.defsig { font-size: 0.825em; padding: 0.2em 0.5em; }
+    dd.defsig { padding: 0 0.5em; }
+    #main { padding: 0 8px; }
+    #hdr-lookup { margin-right: 8px; }
+    #contents { margin-left: 8px; margin-right: 8px; }
+    /* Left margin is narrower, so modify pre extending into margin */
+    pre { margin-left: -0.3em; 
+	  border-left-width: 1px; 
+	  padding-left: 0.25em;
+	  letter-spacing: -1px;
+	  font-size: 0.75em;
+   }
+}
+
+/* Viewport seems wide enough at 768px (iPad portrai) to support
+   sidebar.  Alternatively use four-column contents (width 25%). */
+
+
+/* IE6 fixes */
+/* #body { _zoom: 1 } */   /* fixes missing contents bar, but screws up body */

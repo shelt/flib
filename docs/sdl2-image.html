@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html class=" js csscolumns"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="sdl2-image_files/chickadee.css" type="text/css">
+<script type="text/javascript" src="sdl2-image_files/modernizr.js"></script>
+<script>if(!window.Modernizr){this.document.documentElement.className=this.document.documentElement.className.replace(/\bno-js\b/,'js')}</script>
+<title>sdl2-image | chickadee</title>
+<meta name="viewport" content="initial-scale=1"></head>
+<body>
+<div id="hdr">
+<h1><a href="http://api.call-cc.org/doc/">chickadee</a> » <a href="http://api.call-cc.org/doc/sdl2-image">sdl2-image</a></h1>
+<h5><label for="hdr-searchbox">Identifier search</label></h5>
+<form id="hdr-lookup" class="hdr-lookup" action="/cdoc" method="get"><input id="hdr-searchbox" name="q" class="text incsearch" data-opts="{&quot;url&quot;:&quot;/cdoc/ajax/prefix&quot;,&quot;delay&quot;:50}" accesskey="f" title="chickadee search (Ctrl-F)" autocomplete="off" autocorrect="off" autocapitalize="off" tabindex="1" type="text"><button id="hdr-submit" name="query-name" title="Search chicken-doc for this identifier" class="button" type="submit">&nbsp;</button></form></div>
+<div style="display: block;" class="sidebar" id="contents">
+<h2 class="contents-list">Contents »</h2>
+<ul class="contents-list">
+<li><a href="#def:compiled-version">compiled-version</a></li>
+<li><a href="#def:current-version">current-version</a></li>
+<li><a href="#def:init.21">init!</a></li>
+<li><a href="#def:load">load</a></li>
+<li><a href="#def:load.2a">load*</a></li>
+<li><a href="#def:load-rw">load-rw</a></li>
+<li><a href="#def:load-rw.2a">load-rw*</a></li>
+<li><a href="#def:load-typed-rw">load-typed-rw</a></li>
+<li><a href="#def:load-typed-rw.2a">load-typed-rw*</a></li>
+<li><a href="#def:quit.21">quit!</a></li></ul></div><div id="body">
+<div id="main"><h2 id="sec:sdl2-image"><a href="#sec:sdl2-image">sdl2-image</a></h2><p>The sdl2-image egg provides bindings to <a href="http://www.libsdl.org/projects/SDL_image/">SDL_image</a> version 2. SDL_image is a library for loading various image formats, compatible with <a href="http://libsdl.org/">Simple DirectMedia Layer</a> version 2 (SDL2), a popular library used in games and other media-rich software.</p><p>The sdl2-image egg is designed to be compatible with the <a href="http://api.call-cc.org/doc/sdl2">sdl2</a> egg, which provides bindings to SDL 2 itself.</p><dl><dt>Project / Source Code Repository</dt>
+<dd><a href="https://gitlab.com/chicken-sdl2/chicken-sdl2-image">https://gitlab.com/chicken-sdl2/chicken-sdl2-image</a></dd><dt>Issue Tracker</dt>
+<dd><a href="https://gitlab.com/chicken-sdl2/chicken-sdl2-image/issues">https://gitlab.com/chicken-sdl2/chicken-sdl2-image/issues</a></dd><dt>Maintainer</dt>
+<dd>John Croisant (john+chicken at croisant dot net)</dd><dt>License</dt>
+<dd><a href="https://gitlab.com/chicken-sdl2/chicken-sdl2-image/blob/master/LICENSE-BSD.txt">BSD 2-Clause</a></dd></dl>
+<p><b>Table of Contents:</b></p>
+<div id="toc">
+<h2 class="toc">TOC »</h2>
+<ul style="display: none;" class="toc">
+<li><a href="#sec:sdl2-image">sdl2-image</a></li>
+<li><a href="#sec:Requirements">Requirements</a></li>
+<li><a href="#sec:Installation">Installation</a></li>
+<li><a href="#sec:Usage_and_Examples">Usage and Examples</a></li>
+<li><a href="#sec:Version_History">Version History</a></li>
+<li><a href="#sec:API">API</a>
+<ul>
+<li><a href="#sec:Quick_Start">Quick Start</a></li>
+<li><a href="#sec:About_the_API">About the API</a>
+<ul>
+<li><a href="#sec:API_Stability">API Stability</a></li>
+<li><a href="#sec:Conventions">Conventions</a></li></ul></li>
+<li><a href="#sec:General">General</a></li>
+<li><a href="#sec:Loading">Loading</a></li></ul></li></ul></div><h2 id="sec:Requirements"><a href="#sec:Requirements">Requirements</a></h2><p>The sdl2-image egg requires the <a href="http://api.call-cc.org/doc/sdl2">sdl2</a> egg, <a href="http://libsdl.org/">Simple DirectMedia Layer</a> version 2.0.0 or higher, and <a href="http://www.libsdl.org/projects/SDL_image/">SDL_image</a> version 2.0 or higher. It will not work with older versions of SDL or SDL_image.</p><p>This
+ egg requires CHICKEN Scheme 4.8 or higher. Please file an issue or 
+contact the maintainer if you need to use this library with an earlier 
+version of CHICKEN Scheme.</p><h2 id="sec:Installation"><a href="#sec:Installation">Installation</a></h2><p>When installing the egg, you should set the <tt>SDL2_FLAGS</tt> environment variable to a string of compiler flags to be used when compiling the egg. If you have the <tt>sdl2-config</tt>
+ helper program installed on your system, you can set appropriate flags 
+and install the extension like so (notice these are back ticks, not 
+quotes):</p><pre>export SDL2_FLAGS=`sdl2-config --cflags --libs`
+chicken-install sdl2-image</pre><p>If you do not have the <tt>sdl2-config</tt>
+ helper program installed on your computer, you may manually specify 
+SDL-related compiler flags (notice these are double quotes, not back 
+ticks):</p><pre>export SDL2_FLAGS="-I/usr/local/include/SDL2 -L/usr/local/lib -lSDL2"
+chicken-install sdl2-image</pre><p>By default, the sdl2-image egg will be linked against SDL_image using the compiler flag <tt>-lSDL2_image</tt>. You can override this by setting the <tt>SDL2_IMAGE_FLAGS</tt>
+ environment variable, if needed. You can also use that environment 
+variable in case you have installed SDL_image in a different location 
+than SDL.</p><p>The <tt>SDL2_FLAGS</tt> and <tt>SDL2_IMAGE_FLAGS</tt> environment variables are only needed during installation of the egg. They do not need to be set during normal use.</p><h2 id="sec:Usage_and_Examples"><a href="#sec:Usage_and_Examples">Usage and Examples</a></h2><p>To
+ avoid procedure name collisions, it is recommended that you import the 
+sdl2-image module using a prefix such as "img:", like so:</p>
+<pre class="highlight prettyprint lang-scm"><span class="opn">(</span><span class="pln">use </span><span class="opn">(</span><span class="pln">prefix sdl2-image img</span><span class="pun">:</span><span class="clo">))</span><span class="pln">
+</span><span class="opn">(</span><span class="pln">img</span><span class="pun">:</span><span class="pln">load </span><span class="str">"image.jpg"</span><span class="clo">)</span></pre><p>The <a href="https://gitlab.com/chicken-sdl2/chicken-sdl2-examples">chicken-sdl2-examples repository</a> contains complete example games and programs, some of which use the sdl2-image egg.</p><h2 id="sec:Version_History"><a href="#sec:Version_History">Version History</a></h2><dl><dt>0.1.0 (2015-12-19)</dt>
+<dd>Initial release.</dd></dl>
+<p>For more information about what changed in each version, see the <a href="https://gitlab.com/chicken-sdl2/chicken-sdl2-image/blob/master/CHANGELOG.md">CHANGELOG</a>.</p><h2 id="sec:API"><a href="#sec:API">API</a></h2><h3 id="sec:Quick_Start"><a href="#sec:Quick_Start">Quick Start</a></h3>
+<pre class="highlight prettyprint lang-scm"><span class="opn">(</span><span class="pln">use </span><span class="opn">(</span><span class="pln">prefix sdl2 sdl2</span><span class="pun">:</span><span class="clo">)</span><span class="pln">
+     </span><span class="opn">(</span><span class="pln">prefix sdl2-image img</span><span class="pun">:</span><span class="clo">)</span><span class="pln">
+     </span><span class="opn">(</span><span class="pln">only lolevel
+           object-evict object-release</span><span class="clo">))</span><span class="pln">
+
+</span><span class="com">;; Load an image from a file.</span><span class="pln">
+</span><span class="opn">(</span><span class="pln">img</span><span class="pun">:</span><span class="pln">load </span><span class="str">"path/to/my-image.jpg"</span><span class="clo">)</span><span class="pln"> </span><span class="com">;; or png, gif, etc.</span><span class="pln">
+
+</span><span class="com">;; Load an image from a blob containing image data.</span><span class="pln">
+</span><span class="com">;; The blob is evicted to static memory so that it will</span><span class="pln">
+</span><span class="com">;; not be moved in memory by the garbage collector.</span><span class="pln">
+</span><span class="opn">(</span><span class="kwd">let</span><span class="pun">*</span><span class="pln"> </span><span class="opn">((</span><span class="pln">source </span><span class="opn">(</span><span class="pln">object-evict </span><span class="lit">'</span><span class="pun">#${...}</span><span class="clo">))</span><span class="pln">
+       </span><span class="opn">(</span><span class="pln">rwops </span><span class="opn">(</span><span class="pln">sdl2</span><span class="pun">:</span><span class="pln">rw-from-blob source</span><span class="clo">))</span><span class="pln">
+       </span><span class="opn">(</span><span class="pln">surf </span><span class="opn">(</span><span class="pln">img</span><span class="pun">:</span><span class="pln">load-rw rwops </span><span class="pun">#</span><span class="kwd">t</span><span class="clo">)))</span><span class="pln">
+  </span><span class="opn">(</span><span class="pln">object-release source</span><span class="clo">)</span><span class="pln">
+  surf</span><span class="clo">)</span><span class="pln">
+
+</span><span class="com">;; Load an image from a string containing image data.</span><span class="pln">
+</span><span class="com">;; Like above, the string is evicted.</span><span class="pln">
+</span><span class="opn">(</span><span class="kwd">let</span><span class="pun">*</span><span class="pln"> </span><span class="opn">((</span><span class="pln">source </span><span class="opn">(</span><span class="pln">object-evict </span><span class="str">"..."</span><span class="clo">))</span><span class="pln">
+       </span><span class="opn">(</span><span class="pln">rwops </span><span class="opn">(</span><span class="pln">sdl2</span><span class="pun">:</span><span class="pln">rw-from-string source</span><span class="clo">))</span><span class="pln">
+       </span><span class="opn">(</span><span class="pln">surf </span><span class="opn">(</span><span class="pln">img</span><span class="pun">:</span><span class="pln">load-rw rwops </span><span class="pun">#</span><span class="kwd">t</span><span class="clo">)))</span><span class="pln">
+  </span><span class="opn">(</span><span class="pln">object-release source</span><span class="clo">)</span><span class="pln">
+  surf</span><span class="clo">)</span></pre><h3 id="sec:About_the_API"><a href="#sec:About_the_API">About the API</a></h3><h4 id="sec:API_Stability"><a href="#sec:API_Stability">API Stability</a></h4><p>The sdl2-image egg follows "<a href="http://semver.org/">semantic versioning</a>".
+ Until version 1.0.0 is released, the API is not guaranteed to be 
+"stable". That means the maintainer reserves the right to change the API
+ if needed, possibly in ways that break backwards compatibility with 
+previous versions. <b>Large backwards-incompatible changes are unlikely</b>, but there may be small tweaks and fixes to the API if problems are discovered.</p><p>After
+ version 1.0.0 is released, the API is guaranteed to remain stable (no 
+backwards-incompatible changes) until the next new major version (e.g. 
+going from version 1.x to 2.0.0, or 2.x to 3.0.0).</p><h4 id="sec:Conventions"><a href="#sec:Conventions">Conventions</a></h4><ul><li>Procedure names are lower case and hyphenated, with no "IMG_" prefix.</li>
+<li>Procedures that cause a side effect are suffixed with "!".</li>
+<li>Some procedures have two versions: one that returns a managed sdl2:surface, and one that returns an unmanaged sdl2:surface. See <a href="http://api.call-cc.org/doc/sdl2#sec:struct-memory-management">Struct Memory Management</a> in the sdl2 egg docs.</li>
+<li>Procedures signal an exception of kind <tt>(exn sdl2)</tt> if they fail.</li>
+</ul>
+<h3 id="sec:General"><a href="#sec:General">General</a></h3><dl class="defsig"><dt class="defsig" id="def:init.21"><a href="http://api.call-cc.org/doc/sdl2-image/init%21"><span class="sig"><tt>(init! #!optional loaders) → list of symbols</tt></span></a> <span class="type">procedure</span></dt>
+<dd class="defsig"><p>See <a href="http://www.libsdl.org/projects/SDL_image/docs/SDL_image.html#SEC8">IMG_Init</a>.</p><p><tt>loaders</tt> defaults to <tt>'(jpg png tif)</tt>.
+ It must be a list of zero or more of those symbols, indicating which 
+image loaders to initialize. (Other image formats are built into 
+SDL_image and do not need to be initialized.)</p><p>Returns a list of 
+symbols indicating all the image loaders that are now initialized, 
+including any that were already initialized. You should check the return
+ value to see whether all the image loaders you requested were actually 
+initialized. If not, <tt>get-error</tt> from the sdl2 egg <i>might</i> return an error message explaining why the image loader could not be initialized. (This is a limitation of SDL_image.)</p><p>It
+ is not usually necessary to call this procedure. Image loaders will 
+automatically be initialized when needed. But, you may wish to call this
+ procedure to check whether a loader is available, or to initialize the 
+loaders ahead of time to avoid a small delay later.</p></dd>
+</dl>
+<dl class="defsig"><dt class="defsig" id="def:quit.21"><a href="http://api.call-cc.org/doc/sdl2-image/quit%21"><span class="sig"><tt>(quit!)</tt></span></a> <span class="type">procedure</span></dt>
+<dd class="defsig"><p>See <a href="http://www.libsdl.org/projects/SDL_image/docs/SDL_image.html#SEC9">IMG_Quit</a>.</p></dd>
+</dl>
+<dl class="defsig"><dt class="defsig" id="def:compiled-version"><a href="http://api.call-cc.org/doc/sdl2-image/compiled-version"><span class="sig"><tt>(compiled-version) → list of fixnums</tt></span></a> <span class="type">procedure</span></dt>
+<dt class="defsig" id="def:current-version"><a href="http://api.call-cc.org/doc/sdl2-image/current-version"><span class="sig"><tt>(current-version)  → list of fixnums</tt></span></a> <span class="type">procedure</span></dt>
+<dd class="defsig"><p>Returns a list of three nonnegative integers, indicating a version number of SDL_image. For example, the list <tt>(2 0 0)</tt> indicates SDL_image 2.0.0.</p><ul><li><tt>compiled-version</tt> returns the version of SDL_image that the sdl2-image egg was compiled with.</li>
+<li><tt>current-version</tt> returns the version of SDL_image that the sdl2-image egg is currently using.</li>
+</ul>
+<p>For example, the user may have compiled the sdl2-image egg with 
+SDL_image 2.0.0, then later upgraded SDL_image to 2.1.0, but not yet 
+recompiled the sdl2-image egg with the new version. In such a case, <tt>compiled-version</tt> would return <tt>(2 0 0)</tt>, and <tt>current-version</tt> would return <tt>(2 1 0)</tt>. But, features from the new version would not be available until the user recompiles the sdl2-image egg.</p><p>See <a href="http://www.libsdl.org/projects/SDL_image/docs/SDL_image.html#SEC7">SDL_IMAGE_VERSION and IMG_LinkedVersion</a>.</p></dd>
+</dl>
+<h3 id="sec:Loading"><a href="#sec:Loading">Loading</a></h3><dl class="defsig"><dt class="defsig" id="def:load"><a href="http://api.call-cc.org/doc/sdl2-image/load"><span class="sig"><tt>(load  filepath) → sdl2:surface</tt></span></a> <span class="type">procedure</span></dt>
+<dt class="defsig" id="def:load.2a"><a href="http://api.call-cc.org/doc/sdl2-image/load%2A"><span class="sig"><tt>(load* filepath) → sdl2:surface</tt></span></a> <span class="type">procedure</span></dt>
+<dd class="defsig"><p>Attempts to load the image file at the given filepath (a string). The image may be any format supported by SDL_image. See <a href="http://www.libsdl.org/projects/SDL_image/docs/SDL_image.html#SEC11">IMG_Load</a>.</p><p>Returns a <a href="http://api.call-cc.org/doc/sdl2#sec:sdl2surface">sdl2:surface</a> with the image contents. Signals an exception of kind <tt>(exn sdl2)</tt> if the image could not be loaded.</p><ul><li><tt>load</tt> returns a managed sdl2:surface.</li>
+<li><tt>load*</tt> returns an unmanaged sdl2:surface, which must be freed with <tt>free-surface!</tt> (from the sdl2 egg) when you are done with it.</li>
+</ul>
+</dd>
+</dl>
+<dl class="defsig"><dt class="defsig" id="def:load-rw"><a href="http://api.call-cc.org/doc/sdl2-image/load-rw"><span class="sig"><tt>(load-rw  rwops #!optional close?) → sdl2:surface</tt></span></a> <span class="type">procedure</span></dt>
+<dt class="defsig" id="def:load-rw.2a"><a href="http://api.call-cc.org/doc/sdl2-image/load-rw%2A"><span class="sig"><tt>(load-rw* rwops #!optional close?) → sdl2:surface</tt></span></a> <span class="type">procedure</span></dt>
+<dd class="defsig"><p>Attempts to load an image from an <a href="http://api.call-cc.org/doc/sdl2#sec:rwops">sdl2:rwops</a>. This procedure allows you to load an image from a variety of sources, such as a <a href="http://api.call-cc.org/doc/library#sec:blobs">blob</a>, string, memory pointer, or file. See <a href="http://www.libsdl.org/projects/SDL_image/docs/SDL_image.html#SEC12">IMG_Load_RW</a>.</p><p>The
+ image may be any format supported by SDL_image, except TGA. If you want
+ to load a TGA image from an sdl2:rwops, you should use <tt>load-typed-rw</tt> instead.</p><p>If <tt>close?</tt> is #t, the sdl2:rwops will be automatically closed after the image is loaded. See <tt>rw-close!</tt> in the sdl2 egg. If <tt>close?</tt> is #f (the default), the sdl2:rwops will not be closed.</p><p>Returns a <a href="http://api.call-cc.org/doc/sdl2#sec:sdl2surface">sdl2:surface</a> with the image contents. Signals an exception of kind <tt>(exn sdl2)</tt> if the image could not be loaded.</p><ul><li><tt>load-rw</tt> returns a managed sdl2:surface.</li>
+<li><tt>load-rw*</tt> returns an unmanaged sdl2:surface, which must be freed with <tt>free-surface!</tt> (from the sdl2 egg) when you are done with it.</li>
+</ul>
+</dd>
+</dl>
+<dl class="defsig"><dt class="defsig" id="def:load-typed-rw"><a href="http://api.call-cc.org/doc/sdl2-image/load-typed-rw"><span class="sig"><tt>(load-typed-rw  rwops close? type-hint) → sdl2:surface</tt></span></a> <span class="type">procedure</span></dt>
+<dt class="defsig" id="def:load-typed-rw.2a"><a href="http://api.call-cc.org/doc/sdl2-image/load-typed-rw%2A"><span class="sig"><tt>(load-typed-rw* rwops close? type-hint) → sdl2:surface</tt></span></a> <span class="type">procedure</span></dt>
+<dd class="defsig"><p>See <a href="http://www.libsdl.org/projects/SDL_image/docs/SDL_image.html#SEC13">IMG_LoadTyped_RW</a>.</p><p>Similar to <tt>load-rw</tt>,
+ except you also give a hint to help SDL_image figure out what the image
+ format is. In practice, this is only necessary when loading a TGA image
+ from an sdl2:rwops. For other image formats you can just use <tt>load-rw</tt> instead.</p><p><tt>type-hint</tt> must be one of the following strings (case is not important):</p><ul><li><tt>"BMP"</tt></li>
+<li><tt>"CUR"</tt></li>
+<li><tt>"GIF"</tt></li>
+<li><tt>"ICO"</tt></li>
+<li><tt>"JPG"</tt></li>
+<li><tt>"LBM"</tt></li>
+<li><tt>"PCX"</tt></li>
+<li><tt>"PNG"</tt></li>
+<li><tt>"PNM"</tt></li>
+<li><tt>"TGA"</tt></li>
+<li><tt>"TIF"</tt></li>
+<li><tt>"XCF"</tt></li>
+<li><tt>"XPM"</tt></li>
+<li><tt>"XV"</tt></li>
+</ul>
+<p>Returns a <a href="http://api.call-cc.org/doc/sdl2#sec:sdl2surface">sdl2:surface</a> containing the image. Signals an exception of kind <tt>(exn sdl2)</tt> if the image could not be loaded.</p><ul><li><tt>load-rw-typed</tt> returns a managed sdl2:surface.</li>
+<li><tt>load-rw-typed*</tt> returns an unmanaged sdl2:surface, which must be freed with <tt>free-surface!</tt> (from the sdl2 egg) when you are done with it.</li>
+</ul>
+</dd>
+</dl>
+</div></div>
+
+<script type="text/javascript" src="sdl2-image_files/jquery-1.js"></script>
+<script type="text/javascript">window.jQuery || document.write('<script src="/cdoc/jquery-1.9.0.min.js"><\/script>')</script>
+<script type="text/javascript" src="sdl2-image_files/chickadee-jquery.js"></script>
+<script type="text/javascript" src="sdl2-image_files/prettify-bundle.js"></script><div class="incsearch" id="hdr-searchbox-incsearch"></div></body></html>

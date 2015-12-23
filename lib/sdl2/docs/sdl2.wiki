@@ -1,0 +1,3886 @@
+
+This file contains an archive of the sdl2 egg wiki page.
+The most up-to-date version of these docs is available at:
+http://wiki.call-cc.org/eggref/4/sdl2
+
+
+== sdl2
+
+The sdl2 egg provides bindings to [[http://libsdl.org/|Simple
+DirectMedia Layer]] version 2 (SDL2). SDL is a popular library
+used in games and other media-rich software.
+
+The sdl2 egg provides a programmer-friendly, convenient, and
+CHICKEN-idiomatic interface to SDL2. It takes care of the annoying
+low-level C stuff for you, so you can focus on making your game.
+
+If a feature you need is not yet available, please
+[[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/CONTRIBUTING.md#filing-feature-requests|file a feature request]]
+or contact a maintainer, so we can prioritize adding it.
+
+; Project / Source Code Repository : [[https://gitlab.com/chicken-sdl2/chicken-sdl2]]
+; Issue Tracker : [[https://gitlab.com/chicken-sdl2/chicken-sdl2/issues]]
+; Maintainer : John Croisant (john+chicken at croisant dot net)
+; License: [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/LICENSE-BSD.txt|BSD 2-Clause]]
+
+
+'''Table of Contents:'''
+[[toc:]]
+
+
+== Help Wanted!
+
+This egg needs volunteers to help with several things:
+
+* Manual testing (installing, running examples) on different platforms
+* Writing unit tests and semi-automated test programs
+* Writing API reference docs, guides, and tutorials
+* Creating detailed installation instructions for different platforms
+* Creating feature demos and example games/programs
+
+If you wish to help in any way, please contact the project maintainer.
+
+
+== Requirements
+
+The sdl2 egg requires [[http://libsdl.org/|Simple DirectMedia Layer]]
+version 2.0.0 or higher. It will not work with older versions of SDL.
+
+This egg requires CHICKEN Scheme 4.8 or higher.
+Please file an issue or contact the maintainer if you need to use this library with an earlier version of CHICKEN Scheme.
+
+The unit tests depend on the [[/egg/test|test]] egg, and many demos
+and examples depend on the [[/egg/miscmacros|miscmacros]] egg. Some
+demos and examples have other dependencies as well.
+
+
+== Related Libraries
+
+The [[/egg/sdl2-image|sdl2-image egg]] provides bindings to version 2 of the SDL_image library, which provides the ability to load many image formats. It is built to be compatible with sdl2.
+
+The [[/egg/sdl-base|sdl-base egg]] provides bindings to older versions of SDL. Its API is not compatible with sdl2.
+
+
+== Installation
+
+When installing the egg, you should set the SDL2_FLAGS environment
+variable to a string of compiler flags to be used when compiling the
+egg. If you have the {{sdl2-config}} helper program installed on your
+system, you can set appropriate flags and install the extension like
+so (notice these are back ticks, not quotes):
+
+ export SDL2_FLAGS=`sdl2-config --cflags --libs`
+ chicken-install sdl2
+
+If you do not have the {{sdl2-config}} helper program installed on your
+computer, you may manually specify SDL-related compiler flags (notice
+these are double quotes, not back ticks):
+
+ export SDL2_FLAGS="-I/usr/local/include/SDL2 -L/usr/local/lib -lSDL2"
+ chicken-install sdl2
+
+The SDL2_FLAGS environment variable only needs to be set during
+installation of the egg, not during normal use.
+
+
+== Usage and Examples
+
+It is recommended that you import the sdl2 module using the prefix
+"sdl2:", like so:
+
+<enscript highlight="scheme">
+(use (prefix sdl2 sdl2:))
+(sdl2:set-main-ready!)
+(sdl2:init! '(video))
+(define window (sdl2:create-window! "Hello, World!" 0 0 600 400))
+(sdl2:fill-rect! (sdl2:window-surface window)
+                 #f
+                 (sdl2:make-color 0 128 255))
+(sdl2:update-window-surface! window)
+(sdl2:delay! 3000)
+(sdl2:quit!)
+</enscript>
+
+The [[https://gitlab.com/chicken-sdl2/chicken-sdl2/tree/master/demos|demos directory]]
+contains small programs demonstrating how to use various features of sdl2.
+E.g. to compile and run the basics demo:
+
+ csc demos/basics.scm
+ demos/basics
+
+The [[https://gitlab.com/chicken-sdl2/chicken-sdl2-examples|chicken-sdl2-examples repository]]
+contains complete example games and programs made with sdl2.
+
+=== Ensuring Proper Clean Up
+
+You must make sure to call {{set-main-ready!}} and {{init!}} (in that order) soon after your program starts, and to call {{quit!}} before your program ends.
+This is especially important if your program enters fullscreen mode, or changes the display brightness or gamma ramp.
+If your program does not perform proper initialization and clean up, those changes can sometimes linger even after your program has ended, which can be very frustrating for your program's users.
+It is even possible for the user's computer to become stuck in fullscreen mode, requiring the user to power off their computer, possibly losing important work that they were doing in other programs!
+
+Here is a simple way to ensure that {{quit!}} is called before your program ends, whether exitting normally or because an exception occurred:
+
+<enscript highlight="scheme">
+(use (prefix sdl2 sdl2:))
+
+;; Initialize SDL
+(sdl2:set-main-ready!)
+(sdl2:init! '(video)) ;; or whatever init flags your program needs
+
+;; Schedule quit! to be automatically called when your program exits normally.
+(on-exit sdl2:quit!)
+
+;; Install a custom exception handler that will call quit! and then
+;; call the original exception handler. This ensures that quit! will
+;; be called even if an unhandled exception reaches the top level.
+(current-exception-handler
+ (let ((original-handler (current-exception-handler)))
+   (lambda (exception)
+     (sdl2:quit!)
+     (original-handler exception))))
+
+;; ...
+;; ... the rest of your program code ...
+;; ...
+</enscript>
+
+
+== Version History
+
+; 0.1.0 (2015-12-19) : Initial release.
+
+For more information about what changed in each version,
+see the [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/CHANGELOG.md|CHANGELOG]].
+
+
+== API
+
+=== About the API
+
+==== API Stability
+
+The sdl2 egg follows "[[http://semver.org/|semantic versioning]]".
+Until version 1.0.0 is released, the API is not guaranteed to be "stable".
+That means the maintainer reserves the right to change the API if needed,
+possibly in ways that break backwards compatibility with previous versions.
+'''Large backwards-incompatible changes are unlikely''',
+but there may be small tweaks and fixes to the API if problems are discovered.
+
+After version 1.0.0 is released, the API is guaranteed to remain stable (no backwards-incompatible changes)
+until the next new major version (e.g. going from version 1.x to 2.0.0, or 2.x to 3.0.0).
+
+==== Conventions
+
+* Procedures names, including function bindings, are Scheme style.
+** All procedure names are lower case and hyphenated, with no "SDL_" prefix.
+** Procedures that ask a "true or false" question (aka predicates) are suffixed with "?".
+   Usually words such as "has" or "is" are removed from predicate names.
+** Procedures that cause a mutation or side effect are suffixed with "!".
+** Procedures that set the value of a field are named like {{TYPE-FIELD-set!}}, e.g. {{rect-x-set!}}.
+   For setters that have a corresponding getter, it is also possible to use {{(set! ...)}} to set the value, e.g. {{(set! (rect-x my-rect) 42)}}.
+   Usually both forms are equivalent, although in some cases (e.g. {{palette-colors-set!}}) the {{___-set!}} form accepts additional optional arguments that are not possible with the {{(set! ...)}} form.
+
+* Some procedures signal an exception of kind {{(exn sdl2)}} if an error occurs or the operation fails.
+  This is instead of returning an integer error code or null pointer.
+
+* Some procedures return multiple values.
+  For example, {{window-size}} returns two values, the width and height.
+  You can use {{receive}}, {{let-values}}, etc. to capture all the return values.
+
+* Procedures that allocate a new struct often have two versions, one that returns a managed struct record and one that returns an unmanaged struct record, e.g. {{make-surface}} and {{make-surface*}}.
+  See the [[#struct-memory-management|Struct Memory Management]] section for more information.
+
+* Some procedures have a "raw" version, which returns a "low level" type, such as an integer constant or memory pointer.
+  Raw procedures are intended for advanced usage, such as interoperating with other libraries, or for situations where performance is more important than convenience or safety.
+** Many procedures that return an enum symbol or a list of enum symbols, also have a "raw" version that returns an integer value, e.g. {{event-type}} and {{event-type-raw}}.
+** Setters that accept an enum symbol will also accept the corresponding integer value.
+   Setters that accept a list of enum symbols will also accept an integer representing {{bitwise-ior}}'d integer flags or masks.
+
+* Procedures with a name containing the word "color" have an alias spelled as "colour", for the convenience of anyone who spells it that way.
+  Both names refer to exactly the same procedure.
+
+
+==== Enums
+
+The sdl2 egg uses symbols instead of integer constants, for things like event types, keyboard keys, and init flags.
+It uses lists of symbols instead of {{bitwise-ior}}'d integer masks or flags.
+See the [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md|enum tables]] for details.
+
+Many procedures that return an enum symbol or a list of enum symbols, also have a "raw" version that returns the equivalent integer value.
+Setters that accept an enum symbol will also accept the corresponding integer value.
+Setters that accept a list of enum symbols will also accept an integer representing {{bitwise-ior}}'d integer flags or masks.
+
+
+==== The sdl2-internals Module
+
+The sdl2 egg has two modules: the {{sdl2}} module, which defines the public interface for the library, and {{sdl2-internals}}, which defines the "under the hood" code.
+Most users will only need to use the {{sdl2}} module, but for advanced use cases you may need or want to import specific parts of the {{sdl2-internals}} module into your program.
+
+The {{sdl2-internals}} module is not an official part of the public API, and does not have the same guarantees of API stability.
+But, certain parts of the module are safe to use in your programs.
+For more information, see this guide:
+
+* [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/using-sdl2-internals.md|Using sdl2-internals]]
+
+
+==== Struct Memory Management
+
+The sdl2 egg has many "struct record types", which are record types
+that wrap a pointer to a certain kind of C structure from SDL. For
+example, the sdl2:surface record type wraps a pointer to an
+SDL_Surface struct.
+
+Some struct record types have procedures for allocating or freeing an
+instance of that type. Each type that can be allocated has two "make"
+procedures:
+
+* The procedure without an asterisk (e.g. {{make-event}}) returns a
+  '''managed''' struct record, whose underlying struct will be
+  automatically freed when the record is garbage collected.
+
+* The procedure with an asterisk (e.g. {{make-event*}}) returns an
+  '''unmanaged''' struct record, which must be manually freed when you
+  are done with it (e.g. using {{free-event!}}).
+
+Certain other procedures that return new struct records also follow
+this convention, for example {{load-bmp}} vs. {{load-bmp*}}.
+
+In general, it is recommended to create managed struct records, so
+that you don't have to worry about manually freeing them. However,
+there is a slight performance overhead for each managed struct record,
+so if you are creating and destroying very many struct records, you
+can improve performance by creating unmanaged struct records and
+manually freeing them when you are done with them. (But be careful! If
+you forget to free them, your program will leak memory.)
+
+If you create an unmanaged struct record but later change your mind,
+you can start managing it by using {{set-finalizer!}} with the
+appropriate "free" procedure. (Note: it is not currently possible to
+''stop'' managing a struct record.) For example:
+
+<enscript highlight="scheme">
+;; Allocate an unmanaged sdl2:event.
+(let ((my-event (sdl2:make-event*)))
+  ;; Overwrite its data with the next pending event.
+  (sdl2:wait-event! my-event)
+
+  (case (sdl2:event-type my-event)
+    ;; Put keyboard events in a queue for later processing. We aren't
+    ;; sure how long it will live, so start managing it, to be safe.
+    ((key-down key-up)
+     (set-finalizer! my-event sdl2:free-event!)
+     (put-in-queue my-event))
+    ;; If it is any other type of event, perform an immediate action
+    ;; on it, then free it.
+    (else
+     (perform-immediate-action my-event)
+     (sdl2:free-event! my-event))))
+</enscript>
+
+It is safe to manually free managed struct records. In fact, doing so
+can be beneficial to your program's memory footprint and performance,
+because there will be less memory waiting to be freed by the garbage
+collector. For example:
+
+<enscript highlight="scheme">
+(let ((my-surf (sdl2:make-surface 800 600 32)))
+  ;; ... do stuff with my-surf ...
+  ;; Once you are done with my-surf, manually free it.
+  (sdl2:free-surface! my-surf))
+</enscript>
+
+As soon as you free a struct record, its pointer will be set to null,
+and it will no longer be usable for most purposes. You cannot get or
+set its fields, or pass it as an argument to most procedures. So be
+careful not to free struct records that you still want to use!
+
+Some struct record types, such as sdl2:window, are not managed in this
+way. Instead, you use certain SDL functions to work with them, such as
+{{create-window!}} and {{destroy-window!}}.
+
+
+<procedure>(struct-null? record) → boolean</procedure>
+
+Returns #t if the given record is wrapping a null pointer (i.e. a
+pointer with memory address 0). This procedure can be used with any
+struct record type provided by this library.
+
+There are two common reasons why a record might be wrapping a null
+pointer:
+
+* After you free a record (e.g. using {{free-surface!}}), its pointer
+  will be set to null.
+* Certain procedures may return a record with a null pointer if an
+  error occurs or the requested object does not exist.
+
+It is an error to get or set any field of a record that is wrapping a
+null pointer. And, it is an error to pass null struct records to many
+procedures. So, you can use this procedure to check whether it is safe
+to use the record.
+
+
+
+=== Initialization and Clean Up
+
+<procedure>(set-main-ready!)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_SetMainReady|SDL_SetMainReady]].
+
+You should call this soon after your program starts, '''before''' calling {{init!}}.
+See [[/egg/sdl2#ensuring-proper-clean-up|Ensuring Proper Clean Up]].
+
+
+<procedure>(init! #!optional flags-list)</procedure>
+
+Initialize SDL.
+You should call this soon after your program starts, '''after''' calling {{set-main-ready!}}.
+See [[/egg/sdl2#ensuring-proper-clean-up|Ensuring Proper Clean Up]].
+
+{{flags-list}} defaults to {{'(everything)}}. It must be a list of one or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#init-flags|init flag symbols]]:
+
+* {{'timer}}
+* {{'audio}}
+* {{'video}}
+* {{'joystick}}
+* {{'haptic}}
+* {{'game-controller}}
+* {{'events}}
+* {{'everything}}
+
+See [[https://wiki.libsdl.org/SDL_Init|SDL_Init]].
+
+Signals an exception of kind {{(exn sdl2)}} if initialization fails.
+
+
+<procedure>(init-subsystem! flags-list)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_InitSubSystem|SDL_InitSubSystem]].
+
+{{flags-list}} must be a list of one or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#init-flags|init flag]] symbols.
+
+Signals an exception of kind {{(exn sdl2)}} if initialization fails.
+
+
+<procedure>(quit!)</procedure>
+
+Clean up SDL.
+You must make sure to call this before your program ends.
+See [[/egg/sdl2#ensuring-proper-clean-up|Ensuring Proper Clean Up]].
+
+See [[https://wiki.libsdl.org/SDL_Quit|SDL_Quit]].
+
+
+<procedure>(quit-subsystem! flags-list)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_QuitSubSystem|SDL_QuitSubSystem]].
+
+{{flags-list}} must be a list of one or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#init-flags|init flag]] symbols.
+
+
+<procedure>(was-init #!optional flags-list) → list of symbols</procedure>
+
+See [[https://wiki.libsdl.org/SDL_WasInit|SDL_WasInit]].
+
+{{flags-list}} defaults to {{'(everything)}}. It must be a list of one or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#init-flags|init flag]] symbols.
+
+
+
+=== Color
+
+==== sdl2:color
+
+sdl2:color is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Color|SDL_Color]] struct.
+
+
+<procedure>(color? obj) → boolean</procedure>
+<procedure>(colour? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:color.
+
+
+<procedure>(make-color #!optional r g b a) → sdl2:color</procedure>
+<procedure>(make-colour #!optional r g b a) → sdl2:color</procedure>
+<procedure>(make-color* #!optional r g b a) → sdl2:color</procedure>
+<procedure>(make-colour* #!optional r g b a) → sdl2:color</procedure>
+
+Allocate and initialize a new sdl2:color.
+
+{{r}}, {{g}}, {{b}}, and {{a}} must be integers in the range 0 to 255 (inclusive).
+{{r}}, {{g}}, and {{b}} default to 0.
+{{a}} defaults to 255 (full opacity).
+
+* {{make-color}} and {{make-colour}} return a managed sdl2:color.
+* {{make-color*}} and {{make-colour*}} return an unmanaged sdl2:color, which must be freed using {{free-color!}} when you are done with it.
+
+
+<procedure>(free-color! color)</procedure>
+<procedure>(free-colour! color)</procedure>
+
+Free the memory of the sdl2:color's underlying struct. {{color}}'s
+pointer will be set to null (see {{struct-null?}}). It is safe to call
+this procedure with managed or unmanaged sdl2:colors. It is safe (but
+has no effect) to free a struct record multiple times.
+
+
+<procedure>(color-r color) → fixnum</procedure>
+<procedure>(colour-r color) → fixnum</procedure>
+<setter>(set! (color-r color) val)</setter>
+<setter>(set! (colour-r color) val)</setter>
+<setter>(color-r-set! color val)</setter>
+<setter>(colour-r-set! color val)</setter>
+
+Get or set the sdl2:color's "r" (red) field, as an integer in the range 0 to 255 (inclusive).
+
+
+<procedure>(color-g color) → fixnum</procedure>
+<procedure>(colour-g color) → fixnum</procedure>
+<setter>(set! (color-g color) val)</setter>
+<setter>(set! (colour-g color) val)</setter>
+<setter>(color-g-set! color val)</setter>
+<setter>(colour-g-set! color val)</setter>
+
+Get or set the sdl2:color's "g" (green) field, as an integer in the range 0 to 255 (inclusive).
+
+
+<procedure>(color-b color) → fixnum</procedure>
+<procedure>(colour-b color) → fixnum</procedure>
+<setter>(set! (color-b color) val)</setter>
+<setter>(set! (colour-b color) val)</setter>
+<setter>(color-b-set! color val)</setter>
+<setter>(colour-b-set! color val)</setter>
+
+Get or set the sdl2:color's "b" (blue) field, as an integer in the range 0 to 255 (inclusive).
+
+
+<procedure>(color-a color) → fixnum</procedure>
+<procedure>(colour-a color) → fixnum</procedure>
+<setter>(set! (color-a color) val)</setter>
+<setter>(set! (colour-a color) val)</setter>
+<setter>(color-a-set! color val)</setter>
+<setter>(colour-a-set! color val)</setter>
+
+Get or set the sdl2:color's "a" (alpha) field, as an integer in the range 0 to 255 (inclusive).
+
+
+<setter>(color-set! color #!optional r g b a) → color</setter>
+<setter>(colour-set! color #!optional r g b a) → color</setter>
+
+Convenient way of setting multiple fields of the sdl2:color.
+Any arguments that are {{#f}} will cause no change to that field.
+E.g. {{(color-set! my-color 42 #f 255 #f)}} will set the "r" field to 42 and the "b" field to 255, but will not change the "g" or "a" fields.
+Returns {{color}} after it is modified.
+
+
+<procedure>(color->list color) → list of fixnums</procedure>
+<procedure>(colour->list color) → list of fixnums</procedure>
+
+Returns a list {{(r g b a)}} containing the value of each field of the sdl2:color.
+
+
+<procedure>(color=? color1 color2) → boolean</procedure>
+<procedure>(colour=? color1 color2) → boolean</procedure>
+
+Efficiently compare two sdl2:colors.
+Returns #t if the value of every field in {{color1}} is equal to the value of the corresponding field in {{color2}}.
+
+
+<procedure>(copy-color color) → sdl2:color</procedure>
+<procedure>(copy-colour color) → sdl2:color</procedure>
+<procedure>(copy-color* color) → sdl2:color</procedure>
+<procedure>(copy-colour* color) → sdl2:color</procedure>
+
+Efficiently copy the given sdl2:color, returning a new sdl2:color with the same values.
+
+* {{copy-color}} and {{copy-colour}} return a managed sdl2:color.
+* {{copy-color*}} and {{copy-colour*}} return an unmanaged sdl2:color, which must be freed using {{free-color!}} when you are done with it.
+
+
+
+=== Event
+
+==== Event Functions
+
+<procedure>(event-state type) → boolean</procedure>
+<setter>(set! (event-state type) state) → boolean</setter>
+<setter>(event-state-set! type state) → boolean</setter>
+
+Get or set the state of the given event type.
+#t means the event type is enabled, so events of that type may appear on the event queue.
+#f means the event type is disabled, so events of that type will be automatically discarded.
+It is beneficial to your program's performance to disable event types that your program does not need.
+
+{{type}} must be an [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbol]] or corresponding integer.
+
+If you set an event type's state to #f, any events of that type already on the event queue will be immediately discarded.
+The setters return the previous state of the given event type.
+
+See [[https://wiki.libsdl.org/SDL_EventState|SDL_EventState]].
+
+
+<procedure>(flush-event! type)</procedure>
+<procedure>(flush-events! #!optional min-type max-type)</procedure>
+
+Remove all events on the event queue that match the given type or range of types.
+See [[https://wiki.libsdl.org/SDL_FlushEvent|SDL_FlushEvent]]
+and [[https://wiki.libsdl.org/SDL_FlushEvents|SDL_FlushEvents]].
+
+For {{flush-event!}}, {{type}} must be an [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbol]] or corresponding integer.
+
+For {{flush-events!}}, {{min-type}} and {{max-type}} specify the range of event types to remove.
+Events with a type outside of this range will not be removed.
+{{min-type}} and {{max-type}} must be [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbols]] or corresponding integers.
+{{min-type}} defaults to {{'first}} and {{max-type}} defaults to {{'last}}, which means all event types match by default.
+
+
+<procedure>(has-event? type) → boolean</procedure>
+<procedure>(has-events? #!optional min-type max-type) → boolean</procedure>
+
+Returns #t if the event queue currently has at least one event matching the given type or range of types.
+See [[https://wiki.libsdl.org/SDL_HasEvent|SDL_HasEvent]]
+and [[https://wiki.libsdl.org/SDL_HasEvents|SDL_HasEvents]].
+
+For {{has-event?}}, {{type}} must be an [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbol]] or corresponding integer.
+
+For {{has-events?}}, {{min-type}} and {{max-type}} specify the range of event types to consider.
+Events with a type outside of this range will not be considered.
+{{min-type}} and {{max-type}} must be [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbols]] or corresponding integers.
+{{min-type}} defaults to {{'first}} and {{max-type}} defaults to {{'last}}, which means all event types match by default.
+
+
+<procedure>(quit-requested?) → boolean</procedure>
+
+Returns #t if the event queue currently has at least one event of type {{'quit}}.
+See [[https://wiki.libsdl.org/SDL_QuitRequested|SDL_QuitRequested]].
+
+
+<procedure>(get-events! num #!optional min-type max-type) → list of sdl2:events</procedure>
+<procedure>(peek-events num #!optional min-type max-type) → list of sdl2:events</procedure>
+
+Get multiple matching events from the front of the event queue.
+Returns a list of managed sdl2:events.
+See [[https://wiki.libsdl.org/SDL_PeepEvents|SDL_PeepEvents]].
+
+* {{get-events!}} removes the returned events from the event queue.
+* {{peek-events}} does not remove the returned events from the event queue.
+
+{{num}} specifies the maximum number of events to return.
+May return fewer events if there are not enough matching events on the event queue.
+
+{{min-type}} and {{max-type}} specify the range of event types to return.
+Events with a type outside of this range will not be returned (they will remain on the queue).
+{{min-type}} and {{max-type}} must be [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbols]] or corresponding integers.
+{{min-type}} defaults to {{'first}} and {{max-type}} defaults to {{'last}}, which means all event types match by default.
+
+Both procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(poll-event! #!optional result-event) → sdl2:event</procedure>
+
+Get the next event from the event queue.
+The returned event is removed from the event queue.
+See [[https://wiki.libsdl.org/SDL_PollEvent|SDL_PollEvent]].
+
+If {{result-event}} is omitted or #f, a new managed sdl2:event will be returned.
+If {{result-event}} is an sdl2:event, it will be modified and returned.
+This allows you to allocate a single event and reuse it many times in your event loop,
+so that your program does not create as much garbage for the garbage collector.
+
+
+<procedure>(pump-events!)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_PumpEvents|SDL_PumpEvents]].
+
+
+<procedure>(push-event! event) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_PushEvent|SDL_PushEvent]].
+
+Returns #t if the event was pushed onto the event queue, or #f if the event was discarded,
+e.g. because the event type is disabled (see {{event-state}}).
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(wait-event! #!optional result-event) → sdl2:event</procedure>
+<procedure>(wait-event-timeout! timeout #!optional result-event) → sdl2:event or #f</procedure>
+
+Wait for the next event to appear on the event queue, then return it.
+The returned event will be removed from the event queue.
+If there is already an event on the event queue, it will be returned immediately.
+Otherwise, these procedures will block the current thread until the next event appears (or the timeout expires).
+
+* {{wait-event!}} will wait indefinitely for an event to appear.
+* {{wait-event-timeout!}} will stop waiting and return #f if no event appears within {{timeout}} milliseconds.
+  (It may actually wait a few milliseconds longer than specified.
+  You should not rely on its timing being very precise.)
+
+If {{result-event}} is omitted or #f, a new managed sdl2:event will be returned.
+If {{result-event}} is an sdl2:event, it will be modified and returned.
+This allows you to allocate a single event and reuse it many times in your event loop,
+so that your program does not create as much garbage for the garbage collector.
+
+These procedures are compatible with [[/manual/Unit srfi-18|SRFI-18]] multithreading.
+Only the current thread will block while waiting.
+Other threads will continue as normal.
+
+These procedures are inspired by (but do not actually use)
+[[https://wiki.libsdl.org/SDL_WaitEvent|SDL_WaitEvent]] and
+[[https://wiki.libsdl.org/SDL_WaitEventTimeout|SDL_WaitEventTimeout]].
+
+
+<procedure>(register-events! event-symbols) → list of pairs</procedure>
+
+Register zero or more symbols as new user event types.
+After registration, the given symbols may be used as event types, e.g. with {{event-type-set!}}.
+The symbols will be associated with the sdl2:user-event variant of sdl2:event.
+
+{{event-symbols}} must be a list of symbols that are not already being used as event types.
+If any symbol is already being used, or if any member of the list is not a symbol,
+an error will be signalled and none of the new event types will be registered.
+
+There are 32767 user event type numbers available to register.
+Each symbol in {{event-symbols}} will be assigned a sequential number.
+If there are not enough remaining numbers to register all the symbols in {{event-symbols}},
+this procedure will signal an exception of kind {{(exn sdl2)}}, and none of the new event types will be registered.
+
+This procedure returns a list of pairs, with the car of each pair being a new event type symbol, and the cdr of each pair being that symbol's assigned number.
+
+This procedure is based on [[https://wiki.libsdl.org/SDL_RegisterEvents|SDL_RegisterEvents]].
+
+
+==== sdl2:event
+
+sdl2:event is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Event|SDL_Event]]. There are many
+specific event structs in SDL, and the sdl2:event type wraps them all.
+Each event struct has a corresponding variant of sdl2:event, described
+below. Each variant has one or more associated
+[[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbols]].
+
+
+<table>
+  <tr>
+    <th>Variant of sdl2:event</th>
+    <th>Underlying struct</th>
+    <th>Event type symbol(s)</th>
+  </tr>
+  <tr>
+    <td>[[#sdl2controller-axis-event|sdl2:controller-axis-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_ControllerAxisEvent|SDL_ControllerAxisEvent]]</td>
+    <td>{{'controller-axis-motion}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2controller-button-event|sdl2:controller-button-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_ControllerButtonEvent|SDL_ControllerButtonEvent]]</td>
+    <td>{{'controller-button-down}}<br>
+        {{'controller-button-up}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2controller-device-event|sdl2:controller-device-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_ControllerDeviceEvent|SDL_ControllerDeviceEvent]]</td>
+    <td>{{'controller-device-added}}<br>
+        {{'controller-device-removed}}<br>
+        {{'controller-device-remapped}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2dollar-gesture-event|sdl2:dollar-gesture-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_DollarGestureEvent|SDL_DollarGestureEvent]]</td>
+    <td>{{'dollar-gesture}}<br>
+        {{'dollar-record}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2drop-event|sdl2:drop-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_DropEvent|SDL_DropEvent]]</td>
+    <td>{{'drop-file}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2joy-axis-event|sdl2:joy-axis-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_JoyAxisEvent|SDL_JoyAxisEvent]]</td>
+    <td>{{'joy-axis-motion}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2joy-ball-event|sdl2:joy-ball-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_JoyBallEvent|SDL_JoyBallEvent]]</td>
+    <td>{{'joy-ball-motion}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2joy-button-event|sdl2:joy-button-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_JoyButtonEvent|SDL_JoyButtonEvent]]</td>
+    <td>{{'joy-button-down}}<br>
+        {{'joy-button-up}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2joy-device-event|sdl2:joy-device-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_JoyDeviceEvent|SDL_JoyDeviceEvent]]</td>
+    <td>{{'joy-device-added}}<br>
+        {{'joy-device-removed}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2joy-hat-event|sdl2:joy-hat-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_JoyHatEvent|SDL_JoyHatEvent]]</td>
+    <td>{{'joy-hat-motion}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2keyboard-event|sdl2:keyboard-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_KeyboardEvent|SDL_KeyboardEvent]]</td>
+    <td>{{'key-down}}<br>
+        {{'key-up}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2mouse-button-event|sdl2:mouse-button-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_MouseButtonEvent|SDL_MouseButtonEvent]]</td>
+    <td>{{'mouse-button-down}}<br>
+        {{'mouse-button-up}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2mouse-motion-event|sdl2:mouse-motion-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_MouseMotionEvent|SDL_MouseMotionEvent]]</td>
+    <td>{{'mouse-motion}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2mouse-wheel-event|sdl2:mouse-wheel-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_MouseWheelEvent|SDL_MouseWheelEvent]]</td>
+    <td>{{'mouse-wheel}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2multi-gesture-event|sdl2:multi-gesture-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_MultiGestureEvent|SDL_MultiGestureEvent]]</td>
+    <td>{{'multi-gesture}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2quit-event|sdl2:quit-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_QuitEvent|SDL_QuitEvent]]</td>
+    <td>{{'quit}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2sys-wm-event|sdl2:sys-wm-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_SysWMEvent|SDL_SysWMEvent]]</td>
+    <td>{{'sys-wm}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2text-editing-event|sdl2:text-editing-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_TextEditingEvent|SDL_TextEditingEvent]]</td>
+    <td>{{'text-editing}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2text-input-event|sdl2:text-input-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_TextInputEvent|SDL_TextInputEvent]]</td>
+    <td>{{'text-input}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2touch-finger-event|sdl2:touch-finger-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_TouchFingerEvent|SDL_TouchFingerEvent]]</td>
+    <td>{{'finger-down}}<br>
+        {{'finger-up}}<br>
+        {{'finger-motion}}</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2user-event|sdl2:user-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_UserEvent|SDL_UserEvent]]</td>
+    <td>(Call {{register-events!}} to register your own user event type symbols.)</td>
+  </tr>
+  <tr>
+    <td>[[#sdl2window-event|sdl2:window-event]]</td>
+    <td>[[https://wiki.libsdl.org/SDL_WindowEvent|SDL_WindowEvent]]</td>
+    <td>{{'window}}</td>
+  </tr>
+</table>
+
+
+
+<procedure>(event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is any variant of sdl2:event.
+
+
+<procedure>(make-event #!optional type) → sdl2:event</procedure>
+<procedure>(make-event* #!optional type) → sdl2:event</procedure>
+
+Allocate and set the type of a new sdl2:event.
+
+{{type}} defaults to {{'first}}. It must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbol]] or equivalent integer.
+
+* {{make-event}} returns a managed sdl2:event.
+* {{make-event*}} returns an unmanaged sdl2:event, which must be freed with {{free-event!}} when you are done with it.
+
+
+<procedure>(free-event! event)</procedure>
+
+Free the memory of the sdl2:event's underlying struct. You can call
+this procedure with any variant of sdl2:event. {{event}}'s pointer
+will be set to null (see {{struct-null?}}). It is safe to call this
+procedure with managed or unmanaged sdl2:events. It is safe (but has
+no effect) to free a struct record multiple times.
+
+
+<procedure>(event-type event) → symbol</procedure>
+<procedure>(event-type-raw event) → fixnum</procedure>
+<setter>(set! (event-type event) val)</setter>
+<setter>(event-type-set! event val)</setter>
+
+Get or set the sdl2:event's "type" field.
+You can use these procedures with any variant of sdl2:event.
+Setting this will change what variant of sdl2:event it is.
+E.g. if you set it to {{'key-down}}, the event will become an sdl2:keyboard-event.
+
+* {{event-type}} returns an [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#event-types|event type symbol]].
+* {{event-type-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+<procedure>(event-timestamp event) → fixnum</procedure>
+<setter>(set! (event-timestamp event) val)</setter>
+<setter>(event-timestamp-set! event val)</setter>
+
+Get or set the sdl2:event's "timestamp" field, as a nonnegative integer representing the time that the event occurred, in milliseconds since the SDL timer system was initialized.
+You can use these procedures with any variant of sdl2:event.
+
+
+
+==== sdl2:controller-axis-event
+
+sdl2:controller-axis-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_ControllerAxisEvent|SDL_ControllerAxisEvent]].
+
+This event variant occurs when an axis on a controller moves.
+There may be more than one controller, and each controller may have more than one axis.
+You can distinguish them using the {{which}} and {{axis}} fields.
+
+sdl2:controller-axis-event has the following event type symbols:
+
+; {{'controller-axis-motion}} : An axis on a controller moved.
+
+
+<procedure>(controller-axis-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:controller-axis-event.
+
+
+<procedure>(controller-axis-event-which event) → fixnum</procedure>
+<setter>(set! (controller-axis-event-which event) val)</setter>
+<setter>(controller-axis-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the device index of the controller (joystick) that the event is related to.
+
+
+<procedure>(controller-axis-event-axis event) → fixnum</procedure>
+<setter>(set! (controller-axis-event-axis event) val)</setter>
+<setter>(controller-axis-event-axis-set! event val)</setter>
+
+Get or set the event's "axis" field, as an integer indicating the axis that the event is related to.
+E.g. 0 indicates the first axis on the controller.
+
+
+<procedure>(controller-axis-event-value event) → fixnum</procedure>
+<setter>(set! (controller-axis-event-value event) val)</setter>
+<setter>(controller-axis-event-value-set! event val)</setter>
+
+Get or set the event's "value" field, as an integer in the range -32768 to 32767 (inclusive), indicating the new value of the axis.
+
+
+
+==== sdl2:controller-button-event
+
+sdl2:controller-button-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_ControllerButtonEvent|SDL_ControllerButtonEvent]].
+
+This event variant occurs when a button on a controller is pressed or released.
+There may be more than one controller, and each controller may have more than one button.
+You can distinguish them using the {{which}} and {{button}} fields.
+
+sdl2:controller-button-event has the following event type symbols:
+
+; {{'controller-button-down}} : A button on a controller was pressed.
+; {{'controller-button-up}} : A button on a controller was released.
+
+<procedure>(controller-button-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:controller-button-event.
+
+
+<procedure>(controller-button-event-which event) → fixnum</procedure>
+<setter>(set! (controller-button-event-which event) val)</setter>
+<setter>(controller-button-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the device index of the controller (joystick) that the event is related to.
+
+
+<procedure>(controller-button-event-button event) → fixnum</procedure>
+<setter>(set! (controller-button-event-button event) val)</setter>
+<setter>(controller-button-event-button-set! event val)</setter>
+
+Get or set the event's "button" field, as an integer indicating the button that the event is related to.
+E.g. 0 indicates the first button on the controller.
+
+
+<procedure>(controller-button-event-state event) → boolean</procedure>
+<setter>(set! (controller-button-event-state event) val)</setter>
+<setter>(controller-button-event-state-set! event val)</setter>
+
+Get or set the event's "state" field, as a boolean indicating whether the button was pressed (#t) or released (#f).
+You can also find out by checking the event type: {{'controller-button-down}} for pressed, or {{'controller-button-up}} for released.
+
+
+
+==== sdl2:controller-device-event
+
+sdl2:controller-device-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_ControllerDeviceEvent|SDL_ControllerDeviceEvent]].
+
+This event variant occurs when a controller is added, removed, or remapped.
+There may be more than one controller.
+You can distinguish them using the {{which}}.
+
+sdl2:controller-device-event has the following event type symbols:
+
+; {{'controller-device-added}} : A controller device was added.
+; {{'controller-device-removed}} : A controller device was removed.
+; {{'controller-device-remapped}} : A controller device was remapped.
+
+<procedure>(controller-device-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:controller-device-event.
+
+
+<procedure>(controller-device-event-which event) → fixnum</procedure>
+<setter>(set! (controller-device-event-which event) val)</setter>
+<setter>(controller-device-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the device index of the controller (joystick) that the event is related to.
+
+
+
+==== sdl2:dollar-gesture-event
+
+sdl2:dollar-gesture-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_DollarGestureEvent|SDL_DollarGestureEvent]].
+
+This event variant occurs when a [[http://depts.washington.edu/aimgroup/proj/dollar/index.html|"$1 unistroke" gesture]] is performed or recorded.
+
+sdl2:dollar-gesture-event has the following event type symbols:
+
+; {{'dollar-gesture}} : A dollar gesture was performed.
+; {{'dollar-record}} : A dollar gesture was recorded.
+
+
+<procedure>(dollar-gesture-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:dollar-gesture-event.
+
+
+<procedure>(dollar-gesture-event-touch-id event) → fixnum</procedure>
+<setter>(set! (dollar-gesture-event-touch-id event) val)</setter>
+<setter>(dollar-gesture-event-touch-id-set! event val)</setter>
+
+Get or set the event's "touch-id" field, as an integer indicating the ID number of the touch device this event is related to.
+
+
+<procedure>(dollar-gesture-event-gesture-id event) → fixnum</procedure>
+<setter>(set! (dollar-gesture-event-gesture-id event) val)</setter>
+<setter>(dollar-gesture-event-gesture-id-set! event val)</setter>
+
+Get or set the event's "gesture-id" field, as an integer indicating the ID number of the closest gesture to the performed stroke.
+
+
+<procedure>(dollar-gesture-event-num-fingers event) → fixnum</procedure>
+<setter>(set! (dollar-gesture-event-num-fingers event) val)</setter>
+<setter>(dollar-gesture-event-num-fingers-set! event val)</setter>
+
+Get or set the event's "num-fingers" field, as an integer indicating the number of fingers used to draw the stroke.
+
+
+<procedure>(dollar-gesture-event-error event) → float</procedure>
+<setter>(set! (dollar-gesture-event-error event) val)</setter>
+<setter>(dollar-gesture-event-error-set! event val)</setter>
+
+Get or set the event's "error" field, as a float indicating the difference between the gesture template and the actual performed gesture. Lower error is a better match.
+
+
+<procedure>(dollar-gesture-event-x event) → float</procedure>
+<setter>(set! (dollar-gesture-event-x event) val)</setter>
+<setter>(dollar-gesture-event-x-set! event val)</setter>
+
+Get or set the event's "x" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized X coordinate of the center of the gesture.
+
+
+<procedure>(dollar-gesture-event-y event) → float</procedure>
+<setter>(set! (dollar-gesture-event-y event) val)</setter>
+<setter>(dollar-gesture-event-y-set! event val)</setter>
+
+Get or set the event's "y" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized Y coordinate of the center of the gesture.
+
+
+
+==== sdl2:drop-event
+
+sdl2:drop-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_DropEvent|SDL_DropEvent]].
+
+This event variant occurs when the user requests that the program open a file,
+e.g. by dragging and dropping a file icon onto the program.
+
+sdl2:drop-event has the following event type symbols:
+
+; {{'drop-file}} : The user requested that a file be opened.
+
+
+<procedure>(drop-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:drop-event.
+
+
+<procedure>(drop-event-file event) → string</procedure>
+<setter>(set! (drop-event-file event) val)</setter>
+<setter>(drop-event-file-set! event val)</setter>
+
+Get or set the event's "file" field, as a string indicating the path to a file that the user requested to be opened.
+
+
+
+==== sdl2:joy-axis-event
+
+sdl2:joy-axis-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_JoyAxisEvent|SDL_JoyAxisEvent]].
+
+This event variant occurs when an axis on a joystick moves.
+There may be more than one joystick, and each joystick may have more than one axis.
+You can distinguish them using the {{which}} and {{axis}} fields.
+
+sdl2:joy-axis-event has the following event type symbols:
+
+; {{'joy-axis-motion}} : An axis on a joystick moved.
+
+
+<procedure>(joy-axis-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:joy-axis-event.
+
+
+<procedure>(joy-axis-event-which event) → fixnum</procedure>
+<setter>(set! (joy-axis-event-which event) val)</setter>
+<setter>(joy-axis-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the device index of the joystick that the event is related to.
+
+
+<procedure>(joy-axis-event-axis event) → fixnum</procedure>
+<setter>(set! (joy-axis-event-axis event) val)</setter>
+<setter>(joy-axis-event-axis-set! event val)</setter>
+
+Get or set the event's "axis" field, as an integer indicating the axis that the event is related to.
+E.g. 0 indicates the first axis on the joystick.
+
+
+<procedure>(joy-axis-event-value event) → fixnum</procedure>
+<setter>(set! (joy-axis-event-value event) val)</setter>
+<setter>(joy-axis-event-value-set! event val)</setter>
+
+Get or set the event's "value" field, as an integer in the range -32768 to 32767 (inclusive), indicating the new value of the axis.
+
+
+
+==== sdl2:joy-ball-event
+
+sdl2:joy-ball-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_JoyBallEvent|SDL_JoyBallEvent]].
+
+This event variant occurs when a trackball on a joystick moves.
+There may be more than one joystick, and each joystick may have more than one trackball.
+You can distinguish them using the {{which}} and {{ball}} fields.
+
+sdl2:joy-ball-event has the following event type symbols:
+
+; {{'joy-ball-motion}} : A trackball on a joystick moved.
+
+
+<procedure>(joy-ball-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:joy-ball-event.
+
+
+<procedure>(joy-ball-event-which event) → fixnum</procedure>
+<setter>(set! (joy-ball-event-which event) val)</setter>
+<setter>(joy-ball-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the device index of the joystick that the event is related to.
+
+
+<procedure>(joy-ball-event-ball event) → fixnum</procedure>
+<setter>(set! (joy-ball-event-ball event) val)</setter>
+<setter>(joy-ball-event-ball-set! event val)</setter>
+
+Get or set the event's "ball" field, as an integer indicating the trackball that the event is related to. E.g. 0 indicates the first trackball on the joystick.
+
+
+<procedure>(joy-ball-event-xrel event) → fixnum</procedure>
+<setter>(set! (joy-ball-event-xrel event) val)</setter>
+<setter>(joy-ball-event-xrel-set! event val)</setter>
+
+Get or set the event's "xrel" field, as an integer (possibly negative) indicating how the trackball's X position changed relative to its previous position.
+
+
+<procedure>(joy-ball-event-yrel event) → fixnum</procedure>
+<setter>(set! (joy-ball-event-yrel event) val)</setter>
+<setter>(joy-ball-event-yrel-set! event val)</setter>
+
+Get or set the event's "yrel" field, as an integer (possibly negative) indicating how the trackball's Y position changed relative to its previous position.
+
+
+
+==== sdl2:joy-button-event
+
+sdl2:joy-button-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_JoyButtonEvent|SDL_JoyButtonEvent]].
+
+This event variant occurs when a button on a joystick is pressed or released.
+There may be more than one joystick, and each joystick may have more than one button.
+You can distinguish them using the {{which}} and {{button}} fields.
+
+sdl2:joy-button-event has the following event type symbols:
+
+; {{'joy-button-down}} : A button on a joystick was pressed.
+; {{'joy-button-up}} : A button on a joystick was released.
+
+
+<procedure>(joy-button-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:joy-button-event.
+
+
+<procedure>(joy-button-event-which event) → fixnum</procedure>
+<setter>(set! (joy-button-event-which event) val)</setter>
+<setter>(joy-button-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the device index of the joystick that the event is related to.
+
+
+<procedure>(joy-button-event-button event) → fixnum</procedure>
+<setter>(set! (joy-button-event-button event) val)</setter>
+<setter>(joy-button-event-button-set! event val)</setter>
+
+Get or set the event's "button" field, as an integer indicating the button that the event is related to.
+E.g. 0 indicates the first button on the joystick.
+
+
+<procedure>(joy-button-event-state event) → boolean</procedure>
+<setter>(set! (joy-button-event-state event) val)</setter>
+<setter>(joy-button-event-state-set! event val)</setter>
+
+Get or set the value of the event's "state" field, as a boolean indicating whether the button was pressed (#t) or released (#f).
+You can also find out by checking the event type: {{'joy-button-down}} for pressed, or {{'joy-button-up}} for released.
+
+
+
+==== sdl2:joy-device-event
+
+sdl2:joy-device-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_JoyDeviceEvent|SDL_JoyDeviceEvent]].
+
+This event variant occurs when a joystick device is added or removed.
+There may be more than one joystick.
+You can distinguish them using the {{which}} field.
+
+sdl2:joy-device-event has the following event type symbols:
+
+; {{'joy-device-added}} : A joystick device was added.
+; {{'joy-device-removed}} : A joystick device was removed.
+
+
+<procedure>(joy-device-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:joy-device-event.
+
+
+<procedure>(joy-device-event-which event) → fixnum</procedure>
+<setter>(set! (joy-device-event-which event) val)</setter>
+<setter>(joy-device-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the device index of the joystick that the event is related to.
+
+
+
+==== sdl2:joy-hat-event
+
+sdl2:joy-hat-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_JoyHatEvent|SDL_JoyHatEvent]].
+
+This event variant occurs when an 8-directional hat switch on a joystick moves.
+There may be more than one joystick, and each joystick may have more than one hat switch.
+You can distinguish them using the {{which}} and {{hat}} fields.
+
+sdl2:joy-hat-event has the following event type symbols:
+
+; {{'joy-hat-motion}} : A hat switch on a joystick moved.
+
+
+<procedure>(joy-hat-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:joy-hat-event.
+
+
+<procedure>(joy-hat-event-which event) → fixnum</procedure>
+<setter>(set! (joy-hat-event-which event) val)</setter>
+<setter>(joy-hat-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the device index of the joystick that the event is related to.
+
+
+<procedure>(joy-hat-event-hat event) → fixnum</procedure>
+<setter>(set! (joy-hat-event-hat event) val)</setter>
+<setter>(joy-hat-event-hat-set! event val)</setter>
+
+Get or set the event's "hat" field, as an integer indicating the hat switch that the event is related to.
+E.g. 0 indicates the first hat switch on the joystick.
+
+
+<procedure>(joy-hat-event-value event) → symbol</procedure>
+<procedure>(joy-hat-event-value-raw event) → fixnum</procedure>
+<setter>(set! (joy-hat-event-value event) val)</setter>
+<setter>(joy-hat-event-value-set! event val)</setter>
+
+Get or set the event's "value" field, indicating the new position of the hat switch.
+
+* {{joy-hat-event-value}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#joystick-hat-position|joystick hat position symbol]].
+* {{joy-hat-event-value-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+==== sdl2:keyboard-event
+
+sdl2:keyboard-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_KeyboardEvent|SDL_KeyboardEvent]].
+
+This event variant occurs when a keyboard key is pressed or released.
+
+sdl2:keyboard-event has the following event type symbols:
+
+; {{'key-down}} : A keyboard key was pressed.
+; {{'key-up}} : A keyboard key was released.
+
+
+<procedure>(keyboard-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:keyboard-event.
+
+
+<procedure>(keyboard-event-window-id event) → fixnum</procedure>
+<setter>(set! (keyboard-event-window-id event) val)</setter>
+<setter>(keyboard-event-window-id-set! event val)</setter>
+
+Get or set the event's "window-id" field, as an integer indicating the ID number of the sdl2:window that had keyboard focus at the time this event occurred, or 0 if no sdl2:window had keyboard focus.
+
+
+<procedure>(keyboard-event-state event) → boolean</procedure>
+<setter>(set! (keyboard-event-state event) val)</setter>
+<setter>(keyboard-event-state-set! event val)</setter>
+
+Get or set the event's "state" field, as a boolean indicating whether the key was pressed (#t) or released (#f).
+You can also find out by checking the event type: {{'key-down}} for pressed, or {{'key-up}} for released.
+
+
+<procedure>(keyboard-event-repeat event) → fixnum</procedure>
+<setter>(set! (keyboard-event-repeat event) val)</setter>
+<setter>(keyboard-event-repeat-set! event val)</setter>
+
+Get or set the event's "repeat" field, as a integer.
+Non-zero indicates that this is a key repeat, caused by the user pressing and holding the key for some time.
+Zero indicates this is not a key repeat.
+
+
+<procedure>(keyboard-event-keysym event) → sdl2:keysym</procedure>
+<setter>(set! (keyboard-event-keysym event) val)</setter>
+<setter>(keyboard-event-keysym-set! event val)</setter>
+
+Get or set the event's "keysym" field, as an sdl2:keysym indicating the key that was pressed or released.
+The getter returns a copy of the sdl2:keysym stored in the event.
+Modifying the returned sdl2:keysym will ''not'' modify the event, but setting this field to a sdl2:keysym ''will'' modify the event.
+
+Instead of using this procedure, it is more efficient and convenient to directly access the fields of the event's sdl2:keysym, using these procedures:
+
+* {{keyboard-event-scancode}}
+* {{keyboard-event-sym}}
+* {{keyboard-event-mod}}
+
+
+<procedure>(keyboard-event-scancode event) → symbol</procedure>
+<procedure>(keyboard-event-scancode-raw event) → fixnum</procedure>
+<setter>(set! (keyboard-event-scancode event) val)</setter>
+<setter>(keyboard-event-scancode-set! event val)</setter>
+
+Get or set the "scancode" field of the event's "keysym" field, indicating the physical key that was pressed or released.
+Setting this will modify the event.
+
+* {{keyboard-event-scancode}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-scancodes|keyboard scancode symbol]].
+* {{keyboard-event-scancode-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+<procedure>(keyboard-event-sym event) → symbol</procedure>
+<procedure>(keyboard-event-sym-raw event) → fixnum</procedure>
+<setter>(set! (keyboard-event-sym event) val)</setter>
+<setter>(keyboard-event-sym-set! event val)</setter>
+
+Get or set the "sym" field of the event's "keysym" field, indicating the logical key that was pressed or released.
+Setting this will modify the event.
+
+* {{keyboard-event-sym}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-keycodes|keyboard keycode symbol]]
+* {{keyboard-event-sym-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+<procedure>(keyboard-event-mod event) → list of symbols</procedure>
+<procedure>(keyboard-event-mod-raw event) → fixnum</procedure>
+<setter>(set! (keyboard-event-mod event) val)</setter>
+<setter>(keyboard-event-mod-set! event val)</setter>
+
+Get or set the "sym" field of the event's "keysym" field, indicating the modifier keys that were being pressed at the time the event occurred.
+Setting this will modify the event.
+
+* {{keyboard-event-mod}} returns a list of zero or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-modifiers|keyboard modifier symbols]].
+* {{keyboard-event-mod-raw}} returns an integer.
+* The setters accept either a list of symbols or an integer.
+
+
+
+==== sdl2:mouse-button-event
+
+sdl2:mouse-button-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_MouseButtonEvent|SDL_MouseButtonEvent]].
+
+This event variant occurs when a mouse button was pressed or released.
+
+sdl2:mouse-button-event has the following event type symbols:
+
+; {{'mouse-button-down}} : A mouse button was pressed.
+; {{'mouse-button-up}} : A mouse button was released.
+
+
+<procedure>(mouse-button-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:mouse-button-event.
+
+
+<procedure>(mouse-button-event-window-id event) → fixnum</procedure>
+<setter>(set! (mouse-button-event-window-id event) val)</setter>
+<setter>(mouse-button-event-window-id-set! event val)</setter>
+
+Get or set the event's "window-id" field, as an integer indicating the ID number of the sdl2:window that had mouse focus at the time this event occurred, or 0 if no sdl2:window had mouse focus.
+
+
+<procedure>(mouse-button-event-which event) → fixnum</procedure>
+<setter>(set! (mouse-button-event-which event) val)</setter>
+<setter>(mouse-button-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the mouse instance ID.
+
+
+<procedure>(mouse-button-event-button event) → symbol</procedure>
+<procedure>(mouse-button-event-button-raw event) → fixnum</procedure>
+<setter>(set! (mouse-button-event-button event) val)</setter>
+<setter>(mouse-button-event-button-set! event val)</setter>
+
+Get or set the event's "button" field, indicating the button that the event is related to.
+
+* {{mouse-button-event-button}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#mouse-buttons|mouse button symbol]]:
+** {{'left}}
+** {{'middle}}
+** {{'right}}
+** {{'x1}}
+** {{'x2}}
+* {{mouse-button-event-button-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+<procedure>(mouse-button-event-state event) → boolean</procedure>
+<setter>(set! (mouse-button-event-state event) val)</setter>
+<setter>(mouse-button-event-state-set! event val)</setter>
+
+Get or set the event's "state" field, as a boolean indicating whether the button was pressed (#t) or released (#f).
+You can also find out by checking the event type: {{'mouse-button-down}} for pressed, or {{'mouse-button-up}} for released.
+
+
+<procedure>(mouse-button-event-x event) → fixnum</procedure>
+<setter>(set! (mouse-button-event-x event) val)</setter>
+<setter>(mouse-button-event-x-set! event val)</setter>
+
+Get or set the event's "x" field, as an integer indicating the X position (in pixels) of the mouse at the time this event occurred.
+
+
+<procedure>(mouse-button-event-y event) → fixnum</procedure>
+<setter>(set! (mouse-button-event-y event) val)</setter>
+<setter>(mouse-button-event-y-set! event val)</setter>
+
+Get or set the event's "y" field, as an integer indicating the Y position (in pixels) of the mouse at the time this event occurred.
+
+
+
+==== sdl2:mouse-motion-event
+
+sdl2:mouse-motion-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_MouseMotionEvent|SDL_MouseMotionEvent]].
+
+This event variant occurs when the mouse cursor moves.
+
+sdl2:mouse-motion-event has the following event type symbols:
+
+; {{'mouse-motion}} : The mouse cursor moved.
+
+
+<procedure>(mouse-motion-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:mouse-motion-event.
+
+
+<procedure>(mouse-motion-event-window-id event) → fixnum</procedure>
+<setter>(set! (mouse-motion-event-window-id event) val)</setter>
+<setter>(mouse-motion-event-window-id-set! event val)</setter>
+
+Get or set the event's "window-id" field, as an integer indicating the ID number of the sdl2:window that had mouse focus at the time this event occurred, or 0 if no sdl2:window had mouse focus.
+
+
+<procedure>(mouse-motion-event-which event) → fixnum</procedure>
+<setter>(set! (mouse-motion-event-which event) val)</setter>
+<setter>(mouse-motion-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the mouse instance ID.
+
+
+<procedure>(mouse-motion-event-state event) → list of symbols</procedure>
+<procedure>(mouse-motion-event-state-raw event) → fixnum</procedure>
+<setter>(set! (mouse-motion-event-state event) val)</setter>
+<setter>(mouse-motion-event-state-set! event val)</setter>
+
+Get or set the event's "state" field, indicating the mouse buttons that were being pressed at the time this event occurred.
+
+* {{mouse-motion-event-state}} returns a list of zero or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#mouse-button-masks|mouse button mask symbols]]:
+** {{'left}}
+** {{'middle}}
+** {{'right}}
+** {{'x1}}
+** {{'x2}}
+* {{mouse-motion-event-state-raw}} returns an integer.
+* The setters accept either a list of zero or more symbols, or an integer.
+
+
+<procedure>(mouse-motion-event-x event) → fixnum</procedure>
+<setter>(set! (mouse-motion-event-x event) val)</setter>
+<setter>(mouse-motion-event-x-set! event val)</setter>
+
+Get or set the event's "x" field, as an integer indicating the X position (in pixels) of the mouse at the time this event occurred.
+
+
+<procedure>(mouse-motion-event-y event) → fixnum</procedure>
+<setter>(set! (mouse-motion-event-y event) val)</setter>
+<setter>(mouse-motion-event-y-set! event val)</setter>
+
+Get or set the event's "y" field, as an integer indicating the Y position (in pixels) of the mouse at the time this event occurred.
+
+
+<procedure>(mouse-motion-event-xrel event) → fixnum</procedure>
+<setter>(set! (mouse-motion-event-xrel event) val)</setter>
+<setter>(mouse-motion-event-xrel-set! event val)</setter>
+
+Get or set the event's "xrel" field, as an integer (possibly negative) indicating the amount the mouse's X position changed since its previous position.
+
+
+<procedure>(mouse-motion-event-yrel event) → fixnum</procedure>
+<setter>(set! (mouse-motion-event-yrel event) val)</setter>
+<setter>(mouse-motion-event-yrel-set! event val)</setter>
+
+Get or set the event's "yrel" field, as an integer (possibly negative) indicating the amount the mouse's Y position changed since its previous position.
+
+
+
+==== sdl2:mouse-wheel-event
+
+sdl2:mouse-wheel-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_MouseWheelEvent|SDL_MouseWheelEvent]].
+
+This event variant occurs when a mouse wheel moves.
+
+sdl2:mouse-wheel-event has the following event type symbols:
+
+; {{'mouse-wheel}} : A mouse wheel moved.
+
+
+<procedure>(mouse-wheel-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:mouse-wheel-event.
+
+
+<procedure>(mouse-wheel-event-window-id event) → fixnum</procedure>
+<setter>(set! (mouse-wheel-event-window-id event) val)</setter>
+<setter>(mouse-wheel-event-window-id-set! event val)</setter>
+
+Get or set the event's "window-id" field, as an integer indicating the ID number of the sdl2:window that had mouse focus at the time this event occurred, or 0 if no sdl2:window had mouse focus.
+
+
+<procedure>(mouse-wheel-event-which event) → fixnum</procedure>
+<setter>(set! (mouse-wheel-event-which event) val)</setter>
+<setter>(mouse-wheel-event-which-set! event val)</setter>
+
+Get or set the event's "which" field, as an integer indicating the mouse instance ID.
+
+
+<procedure>(mouse-wheel-event-x event) → fixnum</procedure>
+<setter>(set! (mouse-wheel-event-x event) val)</setter>
+<setter>(mouse-wheel-event-x-set! event val)</setter>
+
+Get or set the event's "x" field, as an integer (possibly negative) indicating the amount the wheel scrolled horizontally.
+Positive numbers indicate scrolling to the right, negative numbers indicate scrolling to the left.
+
+
+<procedure>(mouse-wheel-event-y event) → fixnum</procedure>
+<setter>(set! (mouse-wheel-event-y event) val)</setter>
+<setter>(mouse-wheel-event-y-set! event val)</setter>
+
+Get or set the event's "y" field, as an integer (possibly negative) indicating the amount the wheel scrolled vertically.
+Positive numbers indicate scrolling away from the user, negative numbers indicate scrolling toward the user.
+
+
+
+==== sdl2:multi-gesture-event
+
+sdl2:multi-gesture-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_MultiGestureEvent|SDL_MultiGestureEvent]].
+
+This event variant occurs when a multi-finger gesture is performed on a touch device.
+This is useful for recognizing common gestures that involve multiple fingers, e.g. pinching or rotating.
+
+sdl2:multi-gesture-event has the following event type symbols:
+
+; {{'multi-gesture}} : A multi-finger gesture was performed.
+
+
+<procedure>(multi-gesture-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:multi-gesture-event.
+
+
+<procedure>(multi-gesture-event-touch-id event) → fixnum</procedure>
+<setter>(set! (multi-gesture-event-touch-id event) val)</setter>
+<setter>(multi-gesture-event-touch-id-set! event val)</setter>
+
+Get or set the event's "touch-id" field, as an integer indicating the ID number of the touch device this event is related to.
+
+
+<procedure>(multi-gesture-event-dtheta event) → float</procedure>
+<setter>(set! (multi-gesture-event-dtheta event) val)</setter>
+<setter>(multi-gesture-event-dtheta-set! event val)</setter>
+
+Get or set the event's "dtheta" field, as a float indicating the amount that the fingers rotated during this motion.
+
+
+<procedure>(multi-gesture-event-ddist event) → float</procedure>
+<setter>(set! (multi-gesture-event-ddist event) val)</setter>
+<setter>(multi-gesture-event-ddist-set! event val)</setter>
+
+Get or set the event's "ddist" field, as a float indicating the amount that the fingers pinched during this motion.
+
+
+<procedure>(multi-gesture-event-x event) → float</procedure>
+<setter>(set! (multi-gesture-event-x event) val)</setter>
+<setter>(multi-gesture-event-x-set! event val)</setter>
+
+Get or set the event's "x" field, as a float indicating the normalized X coordinate of the center of the gesture.
+
+
+<procedure>(multi-gesture-event-y event) → float</procedure>
+<setter>(set! (multi-gesture-event-y event) val)</setter>
+<setter>(multi-gesture-event-y-set! event val)</setter>
+
+Get or set the event's "y" field, as a float indicating the normalized Y coordinate of the center of the gesture.
+
+
+<procedure>(multi-gesture-event-num-fingers event) → fixnum</procedure>
+<setter>(set! (multi-gesture-event-num-fingers event) val)</setter>
+<setter>(multi-gesture-event-num-fingers-set! event val)</setter>
+
+Get or set the event's "num-fingers" field, as an integer indicating the number of fingers used in the gesture.
+
+
+
+==== sdl2:quit-event
+
+sdl2:quit-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_QuitEvent|SDL_QuitEvent]].
+
+This event variant occurs when the user requests to quit the program.
+There are [[https://wiki.libsdl.org/SDL_EventType#SDL_QUIT|various ways this might happen]], depending on the platform.
+
+sdl2:quit-event has the following event type symbols:
+
+; {{'quit}} : The user requested to quit the program.
+
+
+<procedure>(quit-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:quit-event.
+
+
+
+==== sdl2:sys-wm-event
+
+sdl2:sys-wm-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_SysWMEvent|SDL_SysWMEvent]].
+
+This event variant is for very advanced use cases. Most people can ignore it.
+
+sdl2:sys-wm-event has the following event type symbols:
+
+; {{'sys-wm}} : A platform-specific event occurred.
+
+
+<procedure>(sys-wm-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:sys-wm-event.
+
+
+<procedure>(sys-wm-event-msg-raw event) → pointer</procedure>
+<setter>(set! (sys-wm-event-msg-raw event) val)</setter>
+<setter>(sys-wm-event-msg-raw-set! event val)</setter>
+
+Get or set the event's "msg" field, as a raw pointer to a [[https://wiki.libsdl.org/SDL_SysWMmsg|SDL_SysWMmsg]] struct describing the platform-specific event that occurred.
+This is for very advanced use cases. Most people can ignore it.
+
+
+
+==== sdl2:text-editing-event
+
+sdl2:text-editing-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_TextEditingEvent|SDL_TextEditingEvent]].
+
+This event occurs when a user is editing (composing) text, e.g. using an Input Method Editor (IME).
+See the [[https://wiki.libsdl.org/Tutorials/TextInput|Text Input tutorial for SDL]].
+
+sdl2:text-editing-event has the following event type symbols:
+
+; {{'text-editing}} : The user editted some text being composed.
+
+
+<procedure>(text-editing-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:text-editing-event.
+
+
+<procedure>(text-editing-event-window-id event) → fixnum</procedure>
+<setter>(set! (text-editing-event-window-id event) val)</setter>
+<setter>(text-editing-event-window-id-set! event val)</setter>
+
+Get or set the event's "window-id" field, as an integer indicating the ID number of the sdl2:window that had keyboard focus at the time this event occurred, or 0 if no sdl2:window had keyboard focus.
+
+
+<procedure>(text-editing-event-text event) → string</procedure>
+<setter>(set! (text-editing-event-text event) val)</setter>
+<setter>(text-editing-event-text-set! event val)</setter>
+
+Get or set the event's {{text}} event, as a UTF8 string up to 32 bytes long (including the null byte), holding the text being edited.
+
+
+<procedure>(text-editing-event-start event) → fixnum</procedure>
+<setter>(set! (text-editing-event-start event) val)</setter>
+<setter>(text-editing-event-start-set! event val)</setter>
+
+Get or set the event's "start" field, as an integer indicating the location to begin editing from.
+
+
+<procedure>(text-editing-event-length event) → fixnum</procedure>
+<setter>(set! (text-editing-event-length event) val)</setter>
+<setter>(text-editing-event-length-set! event val)</setter>
+
+Get or set the event's "length" field, as an integer indicating the number of characters to edit from the start point.
+
+
+
+==== sdl2:text-input-event
+
+sdl2:text-input-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_TextInputEvent|SDL_TextInputEvent]].
+
+This event occurs when the users enters some text, possibly using an Input Metod Editor (IME).
+See the [[https://wiki.libsdl.org/Tutorials/TextInput|Text Input tutorial for SDL]].
+
+sdl2:text-input-event has the following event type symbols:
+
+; {{'text-input}} : The use inputted some text.
+
+
+<procedure>(text-input-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:text-input-event.
+
+
+<procedure>(text-input-event-window-id event) → fixnum</procedure>
+<setter>(set! (text-input-event-window-id event) val)</setter>
+<setter>(text-input-event-window-id-set! event val)</setter>
+
+Get or set the event's "window-id" field, as an integer indicating the ID number of the sdl2:window that had keyboard focus at the time this event occurred, or 0 if no sdl2:window had keyboard focus.
+
+
+<procedure>(text-input-event-text event) → string</procedure>
+<setter>(set! (text-input-event-text event) val)</setter>
+<setter>(text-input-event-text-set! event val)</setter>
+
+Get or set the event's {{text}} event, as a UTF8 string up to 32 bytes long (including the ending null byte), holding the text that was inputted.
+
+
+
+==== sdl2:touch-finger-event
+
+sdl2:touch-finger-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_TouchFingerEvent|SDL_TouchFingerEvent]].
+
+This event variant occurs when the user presses, lifts, or moves a finger (or stylus, etc.) on a supported touch device,
+e.g. the touch screen of a mobile phone or tablet device, or certain laptop trackpads.
+There may be more than one finger touching at the same time;
+you can distinguish the fingers by the {{finger-id}} number.
+
+sdl2:touch-finger-event has the following event type symbols:
+
+; {{'finger-down}} : A finger started touching a touch device (i.e. was pressed down).
+; {{'finger-up}} : A finger stopped touching a touch device (i.e. was lifted up).
+; {{'finger-motion}} : A finger moved while touching a touch device.
+
+
+<procedure>(touch-finger-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:touch-finger-event.
+
+
+<procedure>(touch-finger-event-touch-id event) → fixnum</procedure>
+<setter>(set! (touch-finger-event-touch-id event) val)</setter>
+<setter>(touch-finger-event-touch-id-set! event val)</setter>
+
+Get or set the event's "touch-id" field, as an integer indicating the ID number of the touch device this event is related to.
+
+
+<procedure>(touch-finger-event-finger-id event) → fixnum</procedure>
+<setter>(set! (touch-finger-event-finger-id event) val)</setter>
+<setter>(touch-finger-event-finger-id-set! event val)</setter>
+
+Get or set the event's "finger-id" field, as an integer indicating the ID number of the finger this event is related to.
+
+
+<procedure>(touch-finger-event-x event) → float</procedure>
+<setter>(set! (touch-finger-event-x event) val)</setter>
+<setter>(touch-finger-event-x-set! event val)</setter>
+
+Get or set the event's "x" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized X coordinate of the touch event.
+
+
+<procedure>(touch-finger-event-y event) → float</procedure>
+<setter>(set! (touch-finger-event-y event) val)</setter>
+<setter>(touch-finger-event-y-set! event val)</setter>
+
+Get or set the event's "y" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized Y coordinate of the touch event.
+
+
+<procedure>(touch-finger-event-dx event) → float</procedure>
+<setter>(set! (touch-finger-event-dx event) val)</setter>
+<setter>(touch-finger-event-dx-set! event val)</setter>
+
+Get or set the event's "dx" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized distance moved on the X axis.
+
+
+<procedure>(touch-finger-event-dy event) → float</procedure>
+<setter>(set! (touch-finger-event-dy event) val)</setter>
+<setter>(touch-finger-event-dy-set! event val)</setter>
+
+Get or set the event's "dy" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized distance moved on the Y axis.
+
+
+<procedure>(touch-finger-event-pressure event) → float</procedure>
+<setter>(set! (touch-finger-event-pressure event) val)</setter>
+<setter>(touch-finger-event-pressure-set! event val)</setter>
+
+Get or set the event's "pressure" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the pressure being applied.
+
+
+
+==== sdl2:user-event
+
+sdl2:user-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_UserEvent|SDL_UserEvent]].
+
+This event variant does not occur normally.
+Instead, you can make instances of this event variant and push them to the event queue using {{push-event!}}.
+The meaning of this event variant is entirely up for you to decide.
+For example, you can use it to create custom event types related to your gameplay.
+
+sdl2:user-event does not have any event type symbols by default.
+Call {{register-events!}} to register your own custom event type symbols for sdl2:user-event.
+
+
+<procedure>(user-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:user-event.
+
+
+<procedure>(user-event-window-id event) → fixnum</procedure>
+<setter>(set! (user-event-window-id event) val)</setter>
+<setter>(user-event-window-id-set! event val)</setter>
+
+Get or set the event's "window-id" field, as an integer indicating the ID number of the sdl2:window associated with this event.
+
+
+<procedure>(user-event-code event) → fixnum</procedure>
+<setter>(set! (user-event-code event) val)</setter>
+<setter>(user-event-code-set! event val)</setter>
+
+Get or set the event's "code" field, as an integer in the range -32768 to 32767 (inclusive).
+The meaning of this field is for you to decide.
+
+
+<procedure>(user-event-data1-raw event) → pointer or #f</procedure>
+<setter>(set! (user-event-data1-raw event) val)</setter>
+<setter>(user-event-data1-raw-set! event val)</setter>
+
+Get or set the event's "data1" field, as a raw pointer or #f.
+The meaning of this field is for you to decide.
+
+If you want to store a pointer to a Scheme object here, be sure to
+[[/manual/Unit lolevel#object-evict|evict the object]] first. Otherwise
+the object's location in memory might change, rendering the pointer
+invalid.
+
+
+<procedure>(user-event-data2-raw event) → pointer or #f</procedure>
+<setter>(set! (user-event-data2-raw event) val)</setter>
+<setter>(user-event-data2-raw-set! event val)</setter>
+
+Get or set the event's "data2" field, as a raw pointer or #f.
+The meaning of this field is for you to decide.
+
+If you want to store a pointer to a Scheme object here, be sure to
+[[/manual/Unit lolevel#object-evict|evict the object]] first. Otherwise
+the object's location in memory might change, rendering the pointer
+invalid.
+
+
+
+==== sdl2:window-event
+
+sdl2:window-event is a variant of sdl2:event that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_WindowEvent|SDL_WindowEvent]].
+
+This event variant occurs when various changes occur to a window,
+e.g. when a window is moved, resized, minimized, closed, etc.
+
+sdl2:window-event has the following event type symbols:
+
+; {{'window}} : A window-related event occurred.
+
+
+<procedure>(window-event? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:window-event.
+
+
+<procedure>(window-event-window-id event) → fixnum</procedure>
+<setter>(set! (window-event-window-id event) val)</setter>
+<setter>(window-event-window-id-set! event val)</setter>
+
+Get or set the event's "window-id" field, as an integer indicating the ID of the sdl2:window that the event is related to.
+
+
+<procedure>(window-event-event event) → symbol</procedure>
+<procedure>(window-event-event-raw event) → fixnum</procedure>
+<setter>(set! (window-event-event event) val)</setter>
+<setter>(window-event-event-set! event val)</setter>
+
+Get or set the event's "event" field, indicating what happened to the window.
+
+* {{window-event-event}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#window-event-types|window event type symbol]].
+* {{window-event-event-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+<procedure>(window-event-data1 event) → fixnum</procedure>
+<setter>(set! (window-event-data1 event) val)</setter>
+<setter>(window-event-data1-set! event val)</setter>
+
+Get or set the sdl2:window-event's "data1" field, as an integer.
+The meaning of this value depends on what kind of window event it was (see {{window-event-event}}).
+E.g. if the window was resized, this will hold the new window width;
+if the window was moved, this will hold the new x position.
+
+
+<procedure>(window-event-data2 event) → fixnum</procedure>
+<setter>(set! (window-event-data2 event) val)</setter>
+<setter>(window-event-data2-set! event val)</setter>
+
+Get or set the sdl2:window-event's "data2" field, as an integer.
+The meaning of this value depends on what kind of window event it was (see {{window-event-event}}).
+E.g. if the window was resized, this will hold the new window height;
+if the window was moved, this will hold the new y position.
+
+
+
+=== Joystick
+
+==== Joystick Functions
+
+<procedure>(num-joysticks) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_NumJoysticks|SDL_NumJoysticks]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(joystick-open! index) → sdl2:joystick</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickOpen|SDL_JoystickOpen]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(joystick-close! joystick)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickClose|SDL_JoystickClose]].
+
+
+<procedure>(joystick-update!)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickUpdate|SDL_JoystickUpdate]].
+
+
+<procedure>(joystick-event-state) → boolean</procedure>
+<setter>(set! (joystick-event-state) state) → boolean</setter>
+<setter>(joystick-event-state-set! state) → boolean</setter>
+
+{{joystick-event-state}} returns #t if joystick events are currently enabled, or #f if they are disabled (i.e. all future joystick-related events will be ignored).
+
+The setters enable (if {{state}} is #t) or disable (if {{state}} is #f) joytsick events.
+'''WARNING:''' Calling the setters may delete all events currently in the event queue.
+
+These procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+See [[https://wiki.libsdl.org/SDL_JoystickEventState|SDL_JoystickEventState]].
+
+
+<procedure>(joystick-name-for-index device-index) → string or #f</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickNameForIndex|SDL_JoystickNameForIndex]].
+
+Returns #f if no name can be found.
+
+
+<procedure>(joystick-get-device-guid device-index) → sdl2:joystick-guid</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetDeviceGUID|SDL_JoystickGetDeviceGUID]].
+
+Returns a new managed sdl2:joystick-guid.
+
+
+==== sdl2:joystick
+
+sdl2:joystick is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Joystick|SDL_Joystick]] struct.
+
+
+<procedure>(joystick? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:joystick.
+
+
+<procedure>(joystick-instance-id joystick) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickInstanceID|SDL_JoystickInstanceID]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(joystick-name joystick) → string or #f</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickName|SDL_JoystickName]].
+
+Returns #f if no name can be found.
+
+
+<procedure>(joystick-get-guid joystick) → sdl2:joystick-guid</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetGUID|SDL_JoystickGetGUID]].
+
+Returns a new managed sdl2:joystick-guid.
+
+
+<procedure>(joystick-attached? joystick) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetAttached|SDL_JoystickGetAttached]].
+
+
+<procedure>(joystick-num-axes joystick) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickNumAxes|SDL_JoystickNumAxes]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(joystick-num-balls joystick) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickNumBalls|SDL_JoystickNumBalls]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(joystick-num-buttons joystick) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickNumButtons|SDL_JoystickNumButtons]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(joystick-num-hats joystick) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickNumHats|SDL_JoystickNumHats]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(joystick-get-axis joystick axis-num) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetAxis|SDL_JoystickGetAxis]].
+
+Signals an exception of kind {{(exn bounds)}} if {{axis-num}} is less than 0 or greater than the last axis on the joystick (see {{joystick-num-axiss}}).
+
+
+<procedure>(joystick-get-ball joystick ball-num) → [dx dy]</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetBall|SDL_JoystickGetBall]].
+
+This procedure returns multiple values.
+
+Signals an exception of kind {{(exn bounds)}} if {{ball-num}} is less than 0 or greater than the last trackball on the joystick (see {{joystick-num-balls}}).
+Signals an exception of kind {{(exn sdl2)}} if some other error occurs.
+
+
+<procedure>(joystick-get-button joystick button-num) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetButton|SDL_JoystickGetButton]].
+
+Signals an exception of kind {{(exn bounds)}} if {{button-num}} is less than 0 or greater than the last button on the joystick (see {{joystick-num-buttons}}).
+
+
+<procedure>(joystick-get-hat joystick hat-num) → symbol</procedure>
+<procedure>(joystick-get-hat-raw joystick hat-num) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetHat|SDL_JoystickGetHat]].
+
+* {{joystick-get-hat}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#joystick-hat-position|joystick hat position symbol]].
+* {{joystick-get-hat-raw}} returns an integer.
+
+Both procedures signal an exception of kind {{(exn bounds)}} if {{hat-num}} is less than 0 or greater than the last hat switch on the joystick (see {{joystick-num-hats}}).
+
+
+
+==== sdl2:joystick-guid
+
+sdl2:joystick-guid is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_JoystickGetGUID|SDL_JoystickGUID]]
+struct.
+
+
+<procedure>(joystick-guid? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:joystick-guid.
+
+
+<procedure>(free-joystick-guid! guid)</procedure>
+
+Free the memory of the sdl2:joystick-guid's underlying struct.
+{{guid}}'s pointer will be set to null (see {{struct-null?}}). It is
+safe to call this procedure with managed or unmanaged
+sdl2:joystick-guids. It is safe (but has no effect) to free a struct
+record multiple times.
+
+
+<procedure>(joystick-get-guid-from-string str) → sdl2:joystick-guid</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetGUIDFromString|SDL_JoystickGetGUIDFromString]].
+
+Returns a new managed sdl2:joystick-guid.
+
+
+<procedure>(joystick-get-guid-string guid) → string</procedure>
+
+See [[https://wiki.libsdl.org/SDL_JoystickGetGUIDString|SDL_JoystickGetGUIDString]].
+
+
+
+=== Keyboard
+
+==== Keyboard Functions
+
+<procedure>(get-key-from-name name-str) → symbol</procedure>
+<procedure>(get-key-from-name-raw name-str) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetKeyFromName|SDL_GetKeyFromName]].
+
+* {{get-key-from-name}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-keycodes|keyboard keycode symbol]].
+* {{get-key-from-name-raw}} returns an integer.
+
+
+<procedure>(get-key-from-scancode scancode) → symbol</procedure>
+<procedure>(get-key-from-scancode-raw scancode) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetKeyFromScancode|SDL_GetKeyFromScancode]].
+
+{{scancode}} must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-scancodes|keyboard scancode symbol]] or an integer representing a keyboard scancode.
+
+* {{get-key-from-scancode}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-keycodes|keyboard keycode symbol]].
+* {{get-key-from-scancode-raw}} returns an integer.
+
+
+<procedure>(get-key-name key) → string</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetKeyName|SDL_GetKeyName]].
+
+{{key}} must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-keycodes|keyboard keycode symbol]] or an integer representing a keyboard keycode.
+
+
+<procedure>(get-scancode-from-name name-str) → symbol</procedure>
+<procedure>(get-scancode-from-name-raw name-str) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetScancodeFromName|SDL_GetScancodeFromName]].
+
+* {{get-scancode-from-name}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-scancodes|keyboard scancode symbol]].
+* {{get-scancode-from-name-raw}} returns an integer.
+
+
+<procedure>(get-scancode-from-key key) → symbol</procedure>
+<procedure>(get-scancode-from-key-raw key) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetScancodeFromKey|SDL_GetScancodeFromKey]].
+
+{{key}} must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-keycodes|keyboard keycode symbol]] or an integer representing a keyboard keycode.
+
+* {{get-scancode-from-key}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-scancodes|keyboard scancode symbol]].
+* {{get-scancode-from-key-raw}} returns an integer.
+
+
+<procedure>(get-scancode-name scancode) → string</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetScancodeName|SDL_GetScancodeName]].
+
+{{scancode}} must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-scancodes|keyboard scancode symbol]] or an integer representing a keyboard scancode.
+
+
+<procedure>(get-keyboard-focus) → sdl2:window</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetKeyboardFocus|SDL_GetKeyboardFocus]].
+
+
+<procedure>(scancode-pressed? scancode) → boolean</procedure>
+
+Returns #t if the keyboard key with the given scancode is currently
+being pressed.
+
+{{scancode}} must be either a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-scancodes|keyboard scancode symbol]] or an integer representing a scancode.
+
+This procedure queries SDL's internal keyboard state, which is tied to
+the event system. Call {{pump-events!}} to update the keyboard state.
+
+This procedure is based on
+[[https://wiki.libsdl.org/SDL_GetKeyboardState|SDL_GetKeyboardState]].
+
+
+<procedure>(mod-state) → list of symbols </procedure>
+<procedure>(mod-state-raw) → fixnum</procedure>
+<setter>(set! (mod-state) state)</setter>
+<setter>(mod-state-set! state)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetModState|SDL_GetModState]].
+
+* {{mod-state}} returns a list of zero or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-modifiers|keyboard modifier symbols]].
+* {{mod-state-raw}} returns an integer representing a bitfield of keyboard modifiers.
+* The setters accept either a list of zero or more symbols, or an integer.
+
+
+<setter>(text-input-rect-set! rect)</setter>
+
+{{rect}} can be an sdl2:rect or #f.
+
+See [[https://wiki.libsdl.org/SDL_SetTextInputRect|SDL_SetTextInputRect]].
+
+
+<procedure>(start-text-input!)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_StartTextInput|SDL_StartTextInput]].
+
+
+<procedure>(stop-text-input!)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_StopTextInput|SDL_StopTextInput]].
+
+
+<procedure>(text-input-active?) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_IsTextInputActive|SDL_IsTextInputActive]].
+
+
+<procedure>(screen-keyboard-support?) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_HasScreenKeyboardSupport|SDL_HasScreenKeyboardSupport]].
+
+
+<procedure>(screen-keyboard-shown? window) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_IsScreenKeyboardShown|SDL_IsScreenKeyboardShown]].
+
+
+==== sdl2:keysym
+
+sdl2:keysym is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Keysym|SDL_Keysym]] struct.
+
+
+<procedure>(keysym? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:keysym.
+
+
+<procedure>(make-keysym #!optional scancode sym mod) → sdl2:keysym</procedure>
+<procedure>(make-keysym* #!optional scancode sym mod) → sdl2:keysym</procedure>
+
+Allocate and initialize a new sdl2:keysym.
+
+{{scancode}} defaults to {{'unknown}}. It must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-scancodes|keyboard scancode symbol]] or equivalent integer.
+
+{{sym}} defaults to {{'unknown}}. It must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-keycodes|keyboard keycode symbol]] or equivalent integer.
+
+{{mod}} defaults to {{'()}}. It must be a list of zero or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-modifiers|keyboard modifier symbols]] or an equivalent integer bitfield.
+
+* {{make-keysym}} returns a managed sdl2:keysym.
+* {{make-keysym*}} returns an unmanaged sdl2:keysym, which must be freed with {{free-keysym!}} when you are done with it.
+
+
+<procedure>(free-keysym! keysym)</procedure>
+
+Free the memory of the sdl2:keysym's underlying struct. {{keysym}}'s
+pointer will be set to null (see {{struct-null?}}). It is safe to call
+this procedure with managed or unmanaged sdl2:keysyms. It is safe (but
+has no effect) to free a struct record multiple times.
+
+
+<procedure>(keysym-scancode keysym) → symbol</procedure>
+<procedure>(keysym-scancode-raw keysym) → fixnum</procedure>
+<setter>(set! (keysym-scancode keysym) val)</setter>
+<setter>(keysym-scancode-set! keysym val)</setter>
+
+Get or set the sdl2:keysym's "scancode" field, indicating the physical key that this keysym describes.
+
+* {{keysym-scancode}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-scancodes|keyboard scancode symbol]].
+* {{keysym-scancode-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+<procedure>(keysym-sym keysym) → symbol</procedure>
+<procedure>(keysym-sym-raw keysym) → fixnum</procedure>
+<setter>(set! (keysym-sym keysym) val)</setter>
+<setter>(keysym-sym-set! keysym val)</setter>
+
+Get or set the sdl2:keysym's "sym" field, indicating the logical key that this keysym describes.
+
+* {{keysym-sym}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-keycodes|keyboard keycode symbol]].
+* {{keysym-sym-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+<procedure>(keysym-mod keysym) → list of symbols</procedure>
+<procedure>(keysym-mod-raw keysym) → fixnum</procedure>
+<setter>(set! (keysym-mod keysym) val)</setter>
+<setter>(keysym-mod-set! keysym val)</setter>
+
+Get or set the sdl2:keysym's "mod" field, indicating the modifier keys that this keysym describes.
+
+* {{keysym-mod}} returns a list of zero or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#keyboard-modifiers|keyboard modifier symbols]].
+* {{keysym-mod-raw}} returns an integer.
+* The setters accept either a list of zero or more symbols, or an integer.
+
+
+
+=== OpenGL
+
+==== OpenGL Functions
+
+<procedure>(gl-create-context! window) → sdl2:gl-context</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_CreateContext|SDL_GL_CreateContext]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(gl-delete-context! gl-context)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_DeleteContext|SDL_GL_DeleteContext]].
+
+
+<procedure>(gl-make-current! window gl-context)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_MakeCurrent|SDL_GL_MakeCurrent]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(gl-get-current-window) → sdl2:window</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_GetCurrentWindow|SDL_GL_GetCurrentWindow]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(gl-get-current-context) → sdl2:gl-context</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_GetCurrentContext|SDL_GL_GetCurrentContext]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(gl-attribute attr) → value</procedure>
+<setter>(set! (gl-attribute attr) value)</setter>
+<setter>(gl-attribute-set! attr value)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GL_GetAttribute|SDL_GL_GetAttribute]]
+and [[https://wiki.libsdl.org/SDL_GL_SetAttribute|SDL_GL_SetAttribute]].
+
+{{attr}} must be an [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#opengl-attributes|OpenGL attribute symbol]] or corresponding integer.
+
+The value's type depends on {{attr}}:
+
+* If {{attr}} is {{'context-profile-mask}}, the value will be an [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#opengl-profiles|OpenGL profile symbol]]. (The setter also accepts a corresponding integer.)
+
+* If {{attr}} is {{'context-flags}}, the value will be a list of zero or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#opengl-context-flags|OpenGL context flag symbols]] will be returned. (The setter also accepts an equivalent integer bitfield.)
+
+* Otherwise, the value is an integer.
+
+The getter and the setters signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(gl-reset-attributes!)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_ResetAttributes|SDL_GL_ResetAttributes]].
+
+Requires SDL 2.0.2 or higher. Signals an error if the compiled version
+of SDL is not high enough. Use {{(version-at-least? 2 0 2)}} to
+check before calling this procedure.
+
+
+<procedure>(gl-get-drawable-size window) → [width height]</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_GetDrawableSize|SDL_GL_GetDrawableSize]].
+
+This procedure returns multiple values.
+
+Requires SDL 2.0.1 or higher. Signals an error if the compiled version
+of SDL is not high enough. Use {{(version-at-least? 2 0 1)}} to
+check before calling this procedure.
+
+
+<procedure>(gl-swap-window!)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_SwapWindow|SDL_GL_SwapWindow]].
+
+
+<procedure>(gl-swap-interval) → fixnum</procedure>
+<setter>(set! (gl-swap-interval) interval)</setter>
+<setter>(gl-set-swap-interval! interval)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GL_GetSwapInterval|SDL_GL_GetSwapInterval]]
+and [[https://wiki.libsdl.org/SDL_GL_SetSwapInterval|SDL_GL_SetSwapInterval]].
+
+The setters signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(gl-extension-supported? name-string) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GL_ExtensionSupported|SDL_GL_ExtensionSupported]].
+
+
+
+==== sdl2:gl-context
+
+sdl2:gl-context is a record type that wraps a pointer to an SDL_GLContext struct.
+
+<procedure>(gl-context? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:gl-context.
+
+
+
+=== Palette
+
+==== sdl2:palette
+
+sdl2:palette is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Palette|SDL_Palette]] struct.
+
+
+<procedure>(palette? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:palette.
+
+
+<procedure>(make-palette #!optional ncolors) → sdl2:palette</procedure>
+<procedure>(make-palette* #!optional ncolors) → sdl2:palette</procedure>
+
+Allocate and initialize a new sdl2:palette with the given number of colors.
+See [[https://wiki.libsdl.org/SDL_AllocPalette|SDL_AllocPalette]].
+
+{{ncolors}} defaults to 256.
+Common values are 2 (for a 1-bit surface), 16 (for a 4-bit surface), and 256 (for an 8-bit surface).
+
+'''NOTE:''' Usually you do not need to manually allocate a palette. A
+palette will be created for you when you create a surface with a depth
+of 8 or lower, and the palette will be automatically freed when the
+surface is freed (unless the palette is still being used by other
+surfaces).
+
+* {{make-palette}} returns a managed sdl2:palette.
+* {{make-palette*}} returns an unmanaged sdl2:palette, which must be freed with {{free-palette!}} when you are done with it.
+
+Both procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(free-palette! palette)</procedure>
+
+Free the memory of the sdl2:palette's underlying struct. {{palette}}'s
+pointer will be set to null (see {{struct-null?}}). It is safe to call
+this procedure with managed or unmanaged sdl2:palettes. It is safe
+(but has no effect) to free a struct record multiple times.
+
+See [[https://wiki.libsdl.org/SDL_FreePalette|SDL_FreePalette]].
+
+
+<procedure>(palette-ncolors palette) → fixnum</procedure>
+<procedure>(palette-ncolours palette) → fixnum</procedure>
+
+Returns the number of colors in the palette.
+Common values are 2 (for a 1-bit surface), 16 (for a 4-bit surface), and 256 (for an 8-bit surface).
+
+
+<procedure>(palette-ref palette i) → sdl2:color</procedure>
+<setter>(set! (palette-ref palette i) color)</setter>
+<setter>(palette-set! palette i color)</setter>
+
+{{palette-ref}} returns a copy of the color at the given index of the palette, as a managed sdl2:color.
+
+The setters set the given index of the palette to a copy of the given sdl2:color.
+
+These procedures signal an exception of kind {{(exn bounds)}} if the given index is out of bounds.
+
+
+<procedure>(palette-colors palette) → vector of sdl2:colors </procedure>
+<procedure>(palette-colours palette) → vector of sdl2:colors </procedure>
+<setter>(set! (palette-colors palette) colors-vec) → boolean</setter>
+<setter>(set! (palette-colours palette) colors-vec) → boolean</setter>
+<setter>(palette-colors-set! colors-vec #!optional firstcolor) → boolean</setter>
+<setter>(palette-colours-set! colors-vec #!optional firstcolor) → boolean</setter>
+
+{{palette-colors}} and {{palette-colours}} return copies of all colors in the palette, as a Scheme vector of managed sdl2:colors.
+
+The setters set multiple colors in the palette to copies of the given colors.
+See [[https://wiki.libsdl.org/SDL_SetPaletteColors|SDL_SetPaletteColors]].
+
+{{colors-vec}} must be a Scheme vector of sdl2:colors.
+
+{{firstcolor}} specifies the first index of the palette to set.
+I.e., palette index {{firstcolor}} will be set to the first color in {{colors-vec}},
+palette index {{firstcolor + 1}} will be set to the second color, and so on.
+{{firstcolor}} defaults to 0.
+Signals an exception of kind {{(exn bounds)}} if {{firstcolor}} is out of bounds.
+
+The {{set!}} form cannot accept the {{firstcolor}} argument.
+
+The setters return #t if every color in {{colors-vec}} was used, or #f if some colors were not used,
+e.g. because there were more colors in the vector than could fit in the palette.
+
+
+
+=== Pixel Format
+
+==== Pixel Format Functions
+
+<procedure>(map-rgb pixel-format r g b) → fixnum</procedure>
+<procedure>(map-rgba pixel-format r g b a) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_MapRGB|SDL_MapRGB]]
+and [[https://wiki.libsdl.org/SDL_MapRGBA|SDL_MapRGBA]].
+
+
+<procedure>(get-rgb pixel pixel-format) → [r g b]</procedure>
+<procedure>(get-rgba pixel pixel-format) → [r g b a]</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetRGB|SDL_GetRGB]]
+and [[https://wiki.libsdl.org/SDL_GetRGBA|SDL_GetRGBA]].
+
+These procedures return multiple values.
+
+
+<procedure>(pixel-format-enum-to-masks format-enum) → [bpp rmask gmask bmask amask]</procedure>
+
+See [[https://wiki.libsdl.org/SDL_PixelFormatEnumToMasks|SDL_PixelFormatEnumToMasks]].
+
+{{format-enum}} must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#pixel-formats|pixel format symbol]] or equivalent integer.
+
+This procedure returns multiple values:
+
+; bpp   : The color depth (bits per pixel) of the format.
+; rmask : The red mask of the format.
+; gmask : The green mask of the format.
+; bmask : The blue mask of the format.
+; amask : The alpha mask of the format.
+
+Signals an exception of kind {{(exn sdl2)}} if conversion was not possible.
+
+
+==== sdl2:pixel-format
+
+sdl2:pixel-format is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_PixelFormat|SDL_PixelFormat]] struct.
+
+
+<procedure>(pixel-format? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:pixel-format.
+
+
+<procedure>(make-pixel-format #!optional format) → sdl2:pixel-format</procedure>
+<procedure>(make-pixel-format* #!optional format) → sdl2:pixel-format</procedure>
+
+Allocate and initialize a new sdl2:pixel-format with the given format.
+
+{{format}} defaults to {{'unknown}}. It must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#pixel-formats|pixel format symbol]] or equivalent integer.
+See [[https://wiki.libsdl.org/SDL_AllocFormat|SDL_AllocFormat]].
+
+* {{make-pixel-format}} returns a managed sdl2:pixel-format.
+* {{make-pixel-format*}} returns an unmanaged sdl2:pixel-format, which must be freed with {{free-pixel-format!}} when you are done with it.
+
+Both procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(free-pixel-format! pixel-format)</procedure>
+
+Free the memory of the sdl2:pixel-format's underlying struct.
+{{pixel-format}}'s pointer will be set to null (see {{struct-null?}}).
+It is safe to call this procedure with managed or unmanaged
+sdl2:pixel-formats. It is safe (but has no effect) to free a struct
+record multiple times.
+
+See [[https://wiki.libsdl.org/SDL_FreeFormat|SDL_FreeFormat]].
+
+
+<procedure>(pixel-format-format pixel-format) → symbol</procedure>
+<procedure>(pixel-format-format-raw pixel-format) → fixnum</procedure>
+
+Get the sdl2:pixel-format's "format" field.
+
+* {{pixel-format-format}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#pixel-formats|pixel format symbol]].
+* {{pixel-format-format-raw}} returns an integer.
+
+
+<procedure>(pixel-format-palette pixel-format) → sdl2:palette or #f</procedure>
+<setter>(set! (pixel-format-palette pixel-format) val)</setter>
+<setter>(pixel-format-palette-set! pixel-format val)</setter>
+
+Get or set the sdl2:pixel-format's "palette" field, as an sdl2:palette, or #f if it does not have a palette.
+Only sdl2:pixel-formats with bits-per-pixel of 8 or less can have a palette.
+
+See [[https://wiki.libsdl.org/SDL_SetPixelFormatPalette|SDL_SetPixelFormatPalette]].
+
+The setters signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(pixel-format-bits-per-pixel pixel-format) → fixnum</procedure>
+
+Get the sdl2:pixel-format's "bits-per-pixel" field, as an integer.
+Common values are 32, 24, 16, 15, 8, 4, and 1.
+
+
+<procedure>(pixel-format-bytes-per-pixel pixel-format) → fixnum</procedure>
+
+Get the sdl2:pixel-format's "bits-per-pixel" field, as an integer.
+Possible values are 4, 3, 2, and 1.
+
+
+<procedure>(pixel-format-rmask pixel-format) → fixnum</procedure>
+
+Get the sdl2:pixel-format's "rmask" (red mask) field, as a nonnegative integer.
+
+
+<procedure>(pixel-format-gmask pixel-format) → fixnum</procedure>
+
+Get the sdl2:pixel-format's "gmask" (green mask) field, as a nonnegative integer.
+
+
+<procedure>(pixel-format-bmask pixel-format) → fixnum</procedure>
+
+Get the sdl2:pixel-format's "bmask" (blue mask) field, as a nonnegative integer.
+
+
+<procedure>(pixel-format-amask pixel-format) → fixnum</procedure>
+
+Get the sdl2:pixel-format's "amask" (alpha mask) field, as a nonnegative integer.
+It will be 0 if there is no alpha channel.
+
+
+
+=== Rect / Point
+
+==== Rect / Point Functions
+
+<procedure>(rect-empty? rect) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_RectEmpty|SDL_RectEmpty]].
+
+
+<procedure>(enclose-points points #!optional clip result-rect) → [rect any-enclosed?]</procedure>
+
+See [[https://wiki.libsdl.org/SDL_EnclosePoints|SDL_EnclosePoints]].
+
+{{points}} must be a list of sdl2:points.
+
+{{clip}} must be either an sdl2:rect or #f (the default). If {{clip}}
+is an sdl2:rect, points outside the clip rect will be ignored.
+
+If {{result-rect}} is omitted or #f, a new managed sdl2:rect will be
+returned. If {{result-rect}} is an sdl2:rect, it will be modified and
+returned. {{result-rect}} must not be the same object as either
+{{rect1}} or {{rect2}}.
+
+This procedure returns multiple values:
+
+; rect : An sdl2:rect that encloses all matching points. Possibly the same object as {{result-rect}}.
+; any-enclosed? : #t if any points were enclosed, or #f if all points were clipped
+
+
+<procedure>(has-intersection? rect1 rect2) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_HasIntersection|SDL_HasIntersection]].
+
+
+<procedure>(intersect-rect rect1 rect2 #!optional result-rect) → [rect intersect?]</procedure>
+
+See [[https://wiki.libsdl.org/SDL_IntersectRect|SDL_IntersectRect]].
+
+If {{result-rect}} is omitted or #f, a new managed sdl2:rect will be
+returned. If {{result-rect}} is an sdl2:rect, it will be modified and
+returned. {{result-rect}} must not be the same object as either
+{{rect1}} or {{rect2}}.
+
+This procedure returns multiple values:
+
+; rect : An sdl2:rect of the intersection of {{rect1}} and {{rect2}}. Possibly the same object as {{result-rect}}.
+; intersect? : #t if {{rect1}} and {{rect2}} intersect, otherwise #f
+
+
+<procedure>(intersect-rect-and-line rect x1 y1 x2 y2) → [intersect? x1-new y1-new x2-new y2-new]</procedure>
+
+See [[https://wiki.libsdl.org/SDL_IntersectRectAndLine|SDL_IntersectRectAndLine]].
+
+This procedure returns multiple values:
+
+; intersect? : #t if the given line intersects with the rect
+; x1-new : the x value of the point within rect that is closest to the first point
+; y1-new : the y value ...
+; x2-new : the x value of the point within rect that is closest to the second point
+; y2-new : the y value ...
+
+
+<procedure>(union-rect rect1 rect2 #!optional result-rect) → rect</procedure>
+
+See [[https://wiki.libsdl.org/SDL_UnionRect|SDL_UnionRect]].
+
+If {{result-rect}} is omitted or #f, a new managed sdl2:rect will be
+returned. If {{result-rect}} is an sdl2:rect, it will be modified and
+returned. {{result-rect}} must not be the same object as either
+{{rect1}} or {{rect2}}.
+
+
+
+==== sdl2:rect
+
+sdl2:rect is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Rect|SDL_Rect]] struct.
+
+
+<procedure>(rect? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:rect.
+
+
+<procedure>(make-rect #!optional x y w h) → sdl2:rect</procedure>
+<procedure>(make-rect* #!optional x y w h) → sdl2:rect</procedure>
+
+Allocate and initialize a new sdl2:rect.
+
+{{x}}, {{y}}, {{w}}, and {{h}} must be integers in the range -2147483648 to 2147483647 (inclusive).
+They all default to 0.
+
+* {{make-rect}} returns a managed sdl2:rect.
+* {{make-rect*}} returns an unmanaged sdl2:rect, which must be freed with {{free-rect!}} when you are done with it.
+
+
+<procedure>(free-rect! rect)</procedure>
+
+Free the memory of the sdl2:rect's underlying struct. {{rect}}'s
+pointer will be set to null (see {{struct-null?}}). It is safe to call
+this procedure with managed or unmanaged sdl2:rects. It is safe (but
+has no effect) to free a struct record multiple times.
+
+
+<procedure>(rect-x rect) → fixnum</procedure>
+<setter>(set! (rect-x rect) val)</setter>
+<setter>(rect-x-set! rect val)</setter>
+
+Get or set the sdl2:rect's "x" field, as an integer in the range -2147483648 to 2147483647 (inclusive).
+
+
+<procedure>(rect-y rect) → fixnum</procedure>
+<setter>(set! (rect-y rect) val)</setter>
+<setter>(rect-y-set! rect val)</setter>
+
+Get or set the sdl2:rect's "y" field, as an integer in the range -2147483648 to 2147483647 (inclusive).
+
+
+<procedure>(rect-w rect) → fixnum</procedure>
+<setter>(set! (rect-w rect) val)</setter>
+<setter>(rect-w-set! rect val)</setter>
+
+Get or set the sdl2:rect's "w" (width) field, as an integer in the range -2147483648 to 2147483647 (inclusive).
+
+
+<procedure>(rect-h rect) → fixnum</procedure>
+<setter>(set! (rect-h rect) val)</setter>
+<setter>(rect-h-set! rect val)</setter>
+
+Get or set the sdl2:rect's "h" (height) field, as an integer in the range -2147483648 to 2147483647 (inclusive).
+
+
+<procedure>(rect-set! rect #!optional x y w h) → rect</procedure>
+
+Convenient way of setting multiple fields of the sdl2:rect.
+Any arguments that are {{#f}} will cause no change to that field.
+E.g. {{(rect-set! my-rect 42 #f 1337 #f)}} will set the "x" field to 42 and the "w" field to 1337, but will not change the "y" or "h" fields.
+Returns {{rect}} after it is modified.
+
+
+<procedure>(rect->list rect) → list of fixnums</procedure>
+
+Returns a list {{(x y w h)}} containing the value of each field of the sdl2:rect.
+
+
+<procedure>(rect=? rect1 rect2) → boolean</procedure>
+
+Efficiently compare two sdl2:rects.
+Returns #t if the value of every field in {{rect1}} is equal to the value of the corresponding field in {{rect2}}.
+See [[https://wiki.libsdl.org/SDL_RectEquals|SDL_RectEquals]].
+
+
+<procedure>(copy-rect rect) → sdl2:rect</procedure>
+<procedure>(copy-rect* rect) → sdl2:rect</procedure>
+
+Efficiently copy the given sdl2:rect, returning a new sdl2:rect with the same values.
+
+* {{copy-rect}} returns a managed sdl2:rect.
+* {{copy-rect*}} returns an unmanaged sdl2:rect, which must be freed with {{free-rect!}} when you are done with it.
+
+
+
+==== sdl2:point
+
+sdl2:point is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Point|SDL_Point]] struct.
+
+
+<procedure>(point? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:point.
+
+
+<procedure>(make-point #!optional x y) → sdl2:point</procedure>
+<procedure>(make-point* #!optional x y) → sdl2:point</procedure>
+
+Allocate and initialize a new sdl2:point.
+
+{{x}} and {{y}} must be integers in the range -2147483648 to 2147483647 (inclusive).
+They both default to 0.
+
+* {{make-point}} returns a managed sdl2:point.
+* {{make-point*}} returns an unmanaged sdl2:point, which must be freed with {{free-point!}} when you are done with it.
+
+
+<procedure>(free-point! point)</procedure>
+
+Free the memory of the sdl2:point's underlying struct. {{point}}'s
+pointer will be set to null (see {{struct-null?}}). It is safe to call
+this procedure with managed or unmanaged sdl2:points. It is safe (but
+has no effect) to free a struct record multiple times.
+
+
+<procedure>(point-x point) → fixnum</procedure>
+<setter>(set! (point-x point) val)</setter>
+<setter>(point-x-set! point val)</setter>
+
+Get or set the sdl2:point's "x" field, as an integer in the range -2147483648 to 2147483647 (inclusive).
+
+
+<procedure>(point-y point) → fixnum</procedure>
+<setter>(set! (point-y point) val)</setter>
+<setter>(point-y-set! point val)</setter>
+
+Get or set the sdl2:point's "y" field, as an integer in the range -2147483648 to 2147483647 (inclusive).
+
+
+<procedure>(point-set! point #!optional x y) → point</procedure>
+
+Convenient way of setting multiple fields of the sdl2:point.
+Any arguments that are {{#f}} will cause no change to that field.
+E.g. {{(point-set! my-point 42 #f)}} will set the "x" field to 42, but will not change the "y" field.
+Returns {{point}} after it is modified.
+
+
+<procedure>(point->list point) → list of fixnums</procedure>
+
+Returns a list {{(x y)}} containing the value of each field of the sdl2:point.
+
+
+<procedure>(point=? point1 point2) → boolean</procedure>
+
+Efficiently compare two sdl2:points.
+Returns #t if the value of every field in {{point1}} is equal to the value of the corresponding field in {{point2}}.
+
+
+<procedure>(copy-point point) → sdl2:point</procedure>
+<procedure>(copy-point* point) → sdl2:point</procedure>
+
+Efficiently copy the given sdl2:point, returning a new sdl2:point with the same values.
+
+* {{copy-point}} returns a managed sdl2:point.
+* {{copy-point*}} returns an unmanaged sdl2:point, which must be freed with {{free-point!}} when you are done with it.
+
+
+
+=== RWops
+
+==== RWops Functions
+
+<procedure>(rw-from-file filepath) → sdl2:rwops</procedure>
+
+See [[https://wiki.libsdl.org/SDL_RWFromFile|SDL_RWFromFile]].
+
+You should close the sdl2:rwops when you are done with it, using
+{{rw-close!}} or one of the procedures that can automatically close
+the sdl2:rwops, such as {{load-bmp-rw}}.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(rw-from-const-mem pointer) → sdl2:rwops</procedure>
+
+See [[https://wiki.libsdl.org/SDL_RWFromConstMem|SDL_RWFromConstMem]].
+
+You should close the sdl2:rwops when you are done with it, using
+{{rw-close!}} or one of the procedures that can automatically close
+the sdl2:rwops, such as {{load-bmp-rw}}.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(rw-from-mem pointer) → sdl2:rwops</procedure>
+
+See [[https://wiki.libsdl.org/SDL_RWFromMem|SDL_RWFromMem]].
+
+You should close the sdl2:rwops when you are done with it, using
+{{rw-close!}} or one of the procedures that can automatically close
+the sdl2:rwops, such as {{load-bmp-rw}}.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(rw-from-blob blob) → sdl2:rwops</procedure>
+
+Create a new sdl2:rwops that accesses the memory of the given
+[[http://wiki.call-cc.org/manual/Unit%20library#blobs|blob]]. You
+should close the sdl2:rwops when you are done with it, using
+{{rw-close!}} or one of the procedures that can automatically close
+the sdl2:rwops, such as {{load-bmp-rw}}.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+You can also use this procedure to create a sdl2:rwops from a
+[[/manual/Unit srfi-4|SRFI-4]] numeric vector, by first converting it
+to a blob using e.g. {{u8vector->blob/shared}}.
+
+'''CAUTION:''' Creating a sdl2:rwops from a blob in CHICKEN-managed
+memory is unstable: the blob might be garbage collected or moved in
+memory, which would break the sdl2:rwops. To be safe, you should
+[[/manual/Unit lolevel#object-evict|evict]] the blob and create the
+sdl2:rwops from the evicted blob (not the original). You may wish to
+[[/manual/Unit lolevel#object-release|release]] the evicted blob after
+you have closed the sdl2:rwops. Example:
+
+<enscript highlight="scheme">
+(let* ((evicted-blob (object-evict '#${...}))
+       (rwops (sdl2:rw-from-blob evicted-blob))
+       (surf (sdl2:load-bmp-rw rwops #t)))
+  (object-release evicted-blob)
+  surf)
+</enscript>
+
+
+<procedure>(rw-from-string str) → sdl2:rwops</procedure>
+
+Create a new sdl2:rwops that accesses the memory of the given CHICKEN
+Scheme string. You should close the sdl2:rwops when you are done with
+it, using {{rw-close!}} or one of the procedures that can
+automatically close the sdl2:rwops, such as {{load-bmp-rw}}.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+'''CAUTION:''' Creating a sdl2:rwops from a string in CHICKEN-managed
+memory is unstable: the string might be garbage collected or moved in
+memory, which would break the sdl2:rwops. To be safe, you should
+[[/manual/Unit lolevel#object-evict|evict]] the string and create the
+sdl2:rwops from the evicted string (not the original). You may wish to
+[[/manual/Unit lolevel#object-release|release]] the evicted string
+after you have closed the sdl2:rwops. Example:
+
+<enscript highlight="scheme">
+(let* ((evicted-string (object-evict "..."))
+       (rwops (sdl2:rw-from-string evicted-string))
+       (surf (sdl2:load-bmp-rw rwops #t)))
+  (object-release evicted-string)
+  surf)
+</enscript>
+
+
+<procedure>(rw-close! rwops)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_RWclose|SDL_RWclose]].
+
+Close and clean up the given sdl2:rwops. This frees the memory used by
+the SDL_RWops struct itself, but does not free or release the pointer,
+blob, or string that the sdl2:rwops was reading/writing from. (It does
+close files opened with {{rw-from-file}}, though.)
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+==== sdl2:rwops
+
+sdl2:rwops is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_RWops|SDL_RWops]] struct.
+
+
+<procedure>(rwops? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:rwops.
+
+
+<procedure>(rwops-type rwops) → symbol</procedure>
+<procedure>(rwops-type-raw rwops) → fixnum</procedure>
+
+Get the sdl2:rwops' "type" field, indicating the data source type.
+
+* {{rwops-type}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#rwops-types|RWops type symbol]]:
+** {{'unknown}}
+** {{'win-file}}
+** {{'std-file}}
+** {{'jni-file}}
+** {{'memory}}
+** {{'memory-ro}}
+* {{rwops-type-raw}} returns an integer.
+
+
+
+=== Surface
+
+==== Surface Functions
+
+<procedure>(create-rgb-surface* flags width height depth rmask gmask bmask amask) → sdl2:surface</procedure>
+
+See [[https://wiki.libsdl.org/SDL_CreateRGBSurface|SDL_CreateRGBSurface]].
+
+Returns a new '''unmanaged''' sdl2:surface with the given properties.
+You must call {{free-surface!}} when you are done with it.
+
+See {{make-surface}} for a more convenient interface.
+
+Signals an exception of kind {{(exn sdl2)}} if the surface cannot be created.
+
+
+<procedure>(create-rgb-surface-from* pixels width height depth pitch rmask gmask bmask amask) → sdl2:surface</procedure>
+
+Returns a new '''unmanaged''' sdl2:surface with the given properties,
+using existing pixel data (a pointer, e.g. from {{surface-pixels-raw}}).
+You must call {{free-surface!}} when you are done with it.
+
+See [[https://wiki.libsdl.org/SDL_CreateRGBSurfaceFrom|SDL_CreateRGBSurfaceFrom]].
+
+Signals an exception of kind {{(exn sdl2)}} if the surface cannot be created.
+
+
+<procedure>(convert-surface surface pixel-format) → sdl2:surface</procedure>
+<procedure>(convert-surface* surface pixel-format) → sdl2:surface</procedure>
+
+Creates a copy of the given sdl2:surface, but converts it to the given sdl2:pixel-format.
+
+See [[https://wiki.libsdl.org/SDL_ConvertSurface|SDL_ConvertSurface]].
+
+* {{convert-surface}} returns a managed sdl2:surface.
+* {{convert-surface*}} returns an unmanaged sdl2:surface, which must be freed with {{free-surface!}} when you are done with it.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(load-bmp  filepath) → sdl2:surface</procedure>
+<procedure>(load-bmp* filepath) → sdl2:surface</procedure>
+
+See [[https://wiki.libsdl.org/SDL_LoadBMP|SDL_LoadBMP]].
+
+Attempts to load a BMP image file.
+Returns a sdl2:surface containing the image data.
+Signals an exception of kind {{(exn sdl2)}} if the image could not be loaded.
+
+'''NOTE:''' This procedure only supports certain kinds of BMP image.
+Use the [[/egg/sdl2-image|sdl2-image egg]] for better BMP support,
+plus support for loading other image formats like JPG, PNG, and GIF.
+
+* {{load-bmp}} returns a managed sdl2:surface.
+* {{load-bmp*}} returns an unmanaged sdl2:surface, which must be freed with {{free-surface!}} when you are done with it.
+
+
+<procedure>(load-bmp-rw  rwops #!optional close?) → sdl2:surface</procedure>
+<procedure>(load-bmp-rw* rwops #!optional close?) → sdl2:surface</procedure>
+
+See [[https://wiki.libsdl.org/SDL_LoadBMP_RW|SDL_LoadBMP_RW]].
+
+Attempts to load a BMP image from the given sdl2:rwops.
+Returns a sdl2:surface containing the image data.
+Signals an exception of kind {{(exn sdl2)}} if the image could not be loaded.
+
+If {{close?}} is #t, {{rwops}} will be automatically closed (see
+{{rw-close!}}) after the image is loaded. If {{close?}} is #f or
+omitted, {{rwops}} will not be closed.
+
+'''NOTE:''' This procedure only supports certain kinds of BMP image.
+Use the [[/egg/sdl2-image|sdl2-image egg]] for better BMP support,
+plus support for loading other image formats like JPG, PNG, and GIF.
+
+* {{load-bmp-rw}} returns a managed sdl2:surface.
+* {{load-bmp-rw*}} returns an unmanaged sdl2:surface, which must be freed with {{free-surface!}} when you are done with it.
+
+
+<procedure>(save-bmp! surface filepath) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_SaveBMP|SDL_SaveBMP]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(save-bmp-rw! surface rwops #!optional close?) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_SaveBMP_RW|SDL_SaveBMP_RW]].
+
+If {{close?}} is #t, {{rwops}} will be automatically closed (see
+{{rw-close!}}) after the image is loaded. If {{close?}} is #f or
+omitted, {{rwops}} will not be closed.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(lock-surface! surface) → fixnum</procedure>
+<procedure>(unlock-surface! surface)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_LockSurface|SDL_LockSurface]]
+and [[https://wiki.libsdl.org/SDL_UnlockSurface|SDL_UnlockSurface]].
+
+{{lock-surface!}} signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(must-lock? surface) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_MUSTLOCK|SDL_MUSTLOCK]].
+
+
+<procedure>(blit-surface! src src-rect dest dest-rect) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_BlitSurface|SDL_BlitSurface]].
+
+May modify dest-rect.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(blit-scaled! src src-rect dest dest-rect) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_BlitScaled|SDL_BlitScaled]].
+
+May modify dest-rect.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(fill-rect! surface rect color) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_FillRect|SDL_FillRect]].
+
+{{rect}} may be an sdl2:rect to fill part of the surface, or #f to fill
+the entire surface.
+
+{{color}} may be an sdl2:color or a mapped color (an integer, like
+returned by {{map-rgba}}).
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(fill-rects! surface rects color) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_FillRects|SDL_FillRects]].
+
+{{rects}} must be a list of sdl2:rects.
+
+{{color}} may be an sdl2:color or a mapped color (an integer, like
+returned by {{map-rgba}}).
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(surface-ref surface x y) → sdl2:color</procedure>
+<procedure>(surface-ref-raw surface x y) → fixnum</procedure>
+<setter>(set! (surface-ref surface x y) color)</setter>
+<setter>(surface-set! surface x y color)</setter>
+
+Get or set the color of the specified pixel on the surface.
+
+* {{surface-ref}} returns an sdl2:color.
+* {{surface-ref-raw}} returns a mapped color (an integer). You can use {{get-rgba}} to convert the mapped color to color fields.
+* The setters accept either an sdl2:color or a mapped color.
+
+These procedures automatically lock and unlock the surface if needed.
+They signal an exception of kind {{(exn sdl2)}} if the surface cannot be locked.
+
+These procedures signal an exception of kind {{(exn bounds)}} if {{x}} or {{y}} is out of bounds.
+
+The setters ignore the surface's clip rect.
+
+
+<procedure>(rotate-surface-90  surface turns) → sdl2:surface</procedure>
+<procedure>(rotate-surface-90* surface turns) → sdl2:surface</procedure>
+
+Return a copy of the given surface rotated by the given number of 90º clockwise turns.
+{{turns}} must be an integer.
+For example:
+
+* {{turns}} 0 means no rotation
+* {{turns}} 1 means 90º clockwise rotation
+* {{turns}} 2 means 180º rotation
+* {{turns}} 3 (or -1) means 270º clockwise (i.e. 90º counter-clockwise) rotation
+
+The new surface will have an equivalent pixel format, color key, blend mode, alpha mod, and color mod as the given surface.
+If the given surface has a palette, the new surface will share the same palette.
+The new surface will have no clip rect.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+* {{rotate-surface-90}} returns a managed sdl2:surface.
+* {{rotate-surface-90*}} returns an unmanaged sdl2:surface, which must be freed with {{free-surface!}} when you are done with it.
+
+
+<procedure>(flip-surface  surface flip-x? flip-y?) → sdl2:surface</procedure>
+<procedure>(flip-surface* surface flip-x? flip-y?) → sdl2:surface</procedure>
+
+Return a copy of the given surface flipped on the X (horizontal) and/or Y (vertical) axes.
+
+The new surface will have an equivalent pixel format, color key, blend mode, alpha mod, and color mod as the given surface.
+If the given surface has a palette, the new surface will share the same palette.
+The new surface will have no clip rect.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+* {{flip-surface}} returns a managed sdl2:surface.
+* {{flip-surface*}} returns an unmanaged sdl2:surface, which must be freed with {{free-surface!}} when you are done with it.
+
+
+
+==== sdl2:surface
+
+sdl2:surface is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Surface|SDL_Surface]] struct.
+
+
+<procedure>(surface? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:surface.
+
+
+<procedure>(make-surface width height depth) → sdl2:surface or #f</procedure>
+<procedure>(make-surface* width height depth) → sdl2:surface or #f</procedure>
+
+Create a new sdl2:surface with the given width, height, and
+color depth (bits per pixel). This is a more convenient interface for
+{{create-rgb-surface}}. The sdl2:surface's pixel format and masks will
+be chosen automatically based on the requested depth and the current
+platform's byte order (little endian or big endian). Returns #f if the
+sdl2:surface could not be created (e.g. because the color depth is
+unsupported).
+
+* {{make-surface}} returns a managed sdl2:surface.
+* {{make-surface*}} returns an unmanaged sdl2:surface, which must be freed with {{free-surface!}} when you are done with it.
+
+
+<procedure>(free-surface! surface)</procedure>
+
+Free the memory of the sdl2:surface's underlying struct. {{surface}}'s
+pointer will be set to null (see {{struct-null?}}). It is safe to call
+this procedure with managed or unmanaged sdl2:surfaces. It is safe
+(but has no effect) to free a struct record multiple times.
+
+See [[https://wiki.libsdl.org/SDL_FreeSurface|SDL_FreeSurface]].
+
+'''NOTE:''' if {{surface}} was created using
+{{create-rgb-surface-from}}, then the pixel data is not freed.
+
+
+<procedure>(surface-format surface) → sdl2:pixel-format</procedure>
+
+Get the sdl2:surface's "format" field, as a sdl2:pixel-format describing the format of the surface's pixels.
+
+
+<procedure>(surface-w surface) → fixnum</procedure>
+
+Get the sdl2:surface's "w" field, as a nonnegative integer indicating the surface's width in pixels.
+
+
+<procedure>(surface-h surface) → fixnum</procedure>
+
+Get the sdl2:surface's "h" field, as a nonnegative integer indicating the surface's height in pixels.
+
+
+<procedure>(surface-pitch surface) → fixnum</procedure>
+
+Get the sdl2:surface's "pitch" field, as a nonnegative integer indicating how many bytes are used to represent one row of pixel data.
+
+
+<procedure>(surface-pixels-raw surface) → pointer or #f</procedure>
+
+Get the sdl2:surface's "pixels" field, as a raw pointer to the sdl2:surface's pixels.
+Don't use this unless you really know what you are doing!
+
+If you want to get or set a pixel, use {{surface-ref}} and {{surface-set!}} instead.
+They are much safer, more convenient, and more efficient than accessing the pixel data using this pointer.
+
+
+<procedure>(surface-userdata-raw surface) → pointer or #f</procedure>
+<setter>(set! (surface-userdata-raw surface) val)</setter>
+<setter>(surface-userdata-raw-set! surface val)</setter>
+
+Get or set the sdl2:surface's "userdata" field, as a pointer or #f.
+
+If you want to store a pointer to a Scheme object here, be sure to
+[[/manual/Unit lolevel#object-evict|evict the object]] first. Otherwise
+the object's location in memory might change, rendering the pointer
+invalid.
+
+
+<procedure>(surface-refcount surface) → fixnum</procedure>
+<setter>(set! (surface-refcount surface) val)</setter>
+<setter>(surface-refcount-set! surface val)</setter>
+
+Get or set the sdl2:surface's "refcount" field, as an integer.
+
+
+<procedure>(surface-clip-rect surface) → sdl2:rect</procedure>
+<setter>(set! (surface-clip-rect surface) rect) → boolean</setter>
+<setter>(surface-clip-rect-set! surface rect) → boolean</setter>
+
+{{surface-clip-rect}} returns a copy of the surface's clip rect.
+See [[https://wiki.libsdl.org/SDL_GetClipRect|SDL_GetClipRect]].
+
+The setters sets the surface's clip rect to a copy of the given rect.
+{{rect}} may be #f, which disables clipping.
+See [[https://wiki.libsdl.org/SDL_SetClipRect|SDL_SetClipRect]].
+
+The setters return #t if the given rect intersects the surface at all, or #f if the rect is out of bounds (completely clips out the surface).
+
+
+<procedure>(surface-color-key surface) → sdl2:color or #f</procedure>
+<procedure>(surface-colour-key surface) → sdl2:color or #f</procedure>
+<procedure>(surface-color-key-raw surface) → fixnum or #f</procedure>
+<procedure>(surface-colour-key-raw surface) → fixnum or #f</procedure>
+<setter>(set! (surface-color-key surface) color)</setter>
+<setter>(set! (surface-colour-key surface) color)</setter>
+<setter>(surface-color-key-set! surface color)</setter>
+<setter>(surface-colour-key-set! surface color)</setter>
+
+Get or set the sdl2:surface's color key.
+
+See [[https://wiki.libsdl.org/SDL_GetColorKey|SDL_GetColorKey]]
+and [[https://wiki.libsdl.org/SDL_SetColorKey|SDL_SetColorKey]].
+
+* {{surface-color-key}} and {{surface-colour-key}} return an sdl2:color if the surface has a color key, or #f if the surface does not have a color key.
+* {{surface-color-key-raw}} and {{surface-colour-key-raw}} return a mapped color (an integer) if the surface has a color key, or #f if the surface does not have a color key.
+* The setters accept either an sdl2:color, a mapped color (an integer), or #f to disable color keying.
+
+These procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(surface-alpha-mod surface) → fixnum</procedure>
+<setter>(set! (surface-alpha-mod surface) mod) → fixnum</setter>
+<setter>(surface-alpha-mod-set! surface mod) → fixnum</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetSurfaceAlphaMod|SDL_GetSurfaceAlphaMod]]
+and [[https://wiki.libsdl.org/SDL_SetSurfaceAlphaMod|SDL_SetSurfaceAlphaMod]].
+
+These procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(surface-blend-mode surface) → symbol</procedure>
+<procedure>(surface-blend-mode-raw surface) → fixnum</procedure>
+<setter>(set! (surface-blend-mode surface) mode)</setter>
+<setter>(surface-blend-mode-set! surface mode)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetSurfaceBlendMode|SDL_GetSurfaceBlendMode]]
+and [[https://wiki.libsdl.org/SDL_SetSurfaceBlendMode|SDL_SetSurfaceBlendMode]].
+
+* {{surface-blend-mode}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#blend-mode|blend mode symbol]]:
+** {{'none}}
+** {{'blend}}
+** {{'add}}
+** {{'mod}}
+* {{surface-blend-mode-raw}} returns an integer.
+* The setters accept either a symbol or integer.
+
+These procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(surface-color-mod surface) → [r g b]</procedure>
+<procedure>(surface-colour-mod surface) → [r g b]</procedure>
+<setter>(set! (surface-color-mod surface) rgb)</setter>
+<setter>(set! (surface-colour-mod surface) rgb)</setter>
+<setter>(surface-color-mod-set! surface rgb)</setter>
+<setter>(surface-colour-mod-set! surface rgb)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetSurfaceColorMod|SDL_GetSurfaceColorMod]]
+and [[https://wiki.libsdl.org/SDL_SetSurfaceColorMod|SDL_SetSurfaceColorMod]].
+
+{{surface-color-mod}} and {{surface-colour-mod}} return multiple values.
+
+The setters accept either a list {{(r g b)}} of color values, or an sdl2:color (the sdl2:color's "a" field will be ignored).
+
+These procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(surface-palette surface) → sdl2:palette or #f</procedure>
+<setter>(set! (surface-palette surface) palette)</setter>
+<setter>(surface-palette-set! surface palette)</setter>
+
+{{surface-palette}} returns the surface's palette, or #f if it has no palette.
+It is equivalent to {{(compose pixel-format-palette surface-format)}}.
+
+The setters signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+See [[https://wiki.libsdl.org/SDL_SetSurfacePalette|SDL_SetSurfacePalette]].
+
+
+<setter>(surface-rle-set! surface enable?)</setter>
+
+Enable RLE acceleration if {{enable?}} is #t, or disable RLE acceleration if {{enable?}} is #f.
+See [[https://wiki.libsdl.org/SDL_SetSurfaceRLE|SDL_SetSurfaceRLE]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+
+=== Timer
+
+<procedure>(delay! milliseconds)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_Delay|SDL_Delay]].
+
+'''CAUTION:''' This procedure is not compatible with [[/manual/Unit srfi-18|SRFI-18]]
+threads. It will cause '''all threads to sleep''' for the given
+duration. If you are using multiple threads, you should instead call
+SRFI-18's {{thread-sleep!}}, which will cause only the current thread
+to sleep. For example, call {{(thread-sleep! 0.025)}} instead of
+{{(delay! 25)}}.
+
+
+<procedure>(get-ticks) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetTicks|SDL_GetTicks]].
+
+
+<procedure>(get-performance-counter) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetPerformanceCounter|SDL_GetPerformanceCounter]].
+
+
+<procedure>(get-performance-frequency) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetPerformanceFrequency|SDL_GetPerformanceFrequency]].
+
+
+
+=== Touch / Gesture
+
+==== Touch / Gesture Functions
+
+<procedure>(get-num-touch-devices) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetNumTouchDevices|SDL_GetNumTouchDevices]].
+
+
+<procedure>(get-touch-device device-id) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetTouchDevice|SDL_GetTouchDevice]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(get-num-touch-fingers touch-id) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetNumTouchFingers|SDL_GetNumTouchFingers]].
+
+
+<procedure>(get-touch-finger touch-id index) → sdl2:finger</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetTouchFinger|SDL_GetTouchFinger]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+==== sdl2:finger
+
+sdl2:finger is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_Finger|SDL_Finger]] struct.
+
+
+<procedure>(finger? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:finger.
+
+
+<procedure>(finger-id finger) → fixnum</procedure>
+
+Get the sdl2:finger's "id" field, as an integer.
+
+
+<procedure>(finger-x finger) → float</procedure>
+
+Get the sdl2:finger's "x" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized X position of the finger.
+
+
+<procedure>(finger-y finger) → float</procedure>
+
+Get the sdl2:finger's "y" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized Y position of the finger.
+
+
+<procedure>(finger-pressure finger) → float</procedure>
+
+Get the sdl2:finger's "pressure" field, as a float in the range 0.0 to 1.0 (inclusive), indicating the normalized pressure of the finger.
+
+
+
+=== Version
+
+<procedure>(version-at-least? major minor patch) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_VERSION_ATLEAST|SDL_VERSION_ATLEAST]].
+
+Returns #t if the sdl2 egg was compiled with a version of SDL at least as high as specified.
+For example, {{(version-at-least? 2 0 1)}} returns #t if the sdl2 egg was compiled with SDL 2.0.1 or higher.
+
+Some SDL features are only available after a certain version, so you can use this procedure to check whether the feature is available.
+
+
+<procedure>(compiled-version) → list of fixnums</procedure>
+<procedure>(current-version) → list of fixnums</procedure>
+
+Returns a list of three nonnegative integers, indicating a version number of SDL.
+For example, the list {{(2 0 3)}} indicates SDL 2.0.3.
+
+* {{compiled-version}} returns the version of SDL that the sdl2 egg was compiled with.
+* {{current-version}} returns the version of SDL that the sdl2 egg is currently using.
+
+For example, the user may have compiled the sdl2 egg with SDL 2.0.3, then later upgraded SDL to 2.1.0, but not yet recompiled the sdl2 egg with the new version.
+In such a case, {{compiled-version}} would return {{(2 0 3)}}, and {{current-version}} would return {{(2 1 0)}}.
+But, features from the new version would not be available until the user recompiles the sdl2 egg.
+
+See [[https://wiki.libsdl.org/SDL_VERSION|SDL_VERSION]]
+and [[https://wiki.libsdl.org/SDL_GetVersion|SDL_GetVersion]].
+
+
+
+=== Window / Display Mode
+
+==== Window / Display Mode Functions
+
+<procedure>(create-window! title x y w h #!optional flags) → sdl2:window</procedure>
+
+See [[https://wiki.libsdl.org/SDL_CreateWindow|SDL_CreateWindow]].
+
+{{x}} and {{y}} can be integers, the symbol {{'centered}}, or the symbol {{'undefined}}.
+
+{{flags}} defaults to {{'()}}. It must be a list of zero or more [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#window-flags|window flag symbols]] (or an equivalent integer bitfield):
+
+* {{'fullscreen}}
+* {{'fullscreen-desktop}}
+* {{'opengl}}
+* {{'shown}}
+* {{'hidden}}
+* {{'borderless}}
+* {{'resizable}}
+* {{'minimized}}
+* {{'maximized}}
+* {{'input-grabbed}}
+* {{'input-focus}}
+* {{'mouse-focus}}
+* {{'foreign}}
+
+
+<procedure>(destroy-window! window)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_DestroyWindow|SDL_DestroyWindow]].
+
+
+<procedure>(get-window-from-id id) → sdl2:window</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowFromID|SDL_GetWindowFromID]].
+
+
+<procedure>(update-window-surface! window)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_UpdateWindowSurface|SDL_UpdateWindowSurface]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(update-window-surface-rects! window rects)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_UpdateWindowSurfaceRects|SDL_UpdateWindowSurfaceRects]].
+
+{{rects}} must be a list of sdl2:rects.
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(show-window! window)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_ShowWindow|SDL_ShowWindow]].
+
+
+<procedure>(hide-window! window)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_HideWindow|SDL_HideWindow]].
+
+
+<procedure>(maximize-window! window)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_MaximizeWindow|SDL_MaximizeWindow]].
+
+
+<procedure>(minimize-window! window)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_MinimizeWindow|SDL_MinimizeWindow]].
+
+
+<procedure>(raise-window! window)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_RaiseWindow|SDL_RaiseWindow]].
+
+
+<procedure>(restore-window! window)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_RestoreWindow|SDL_RestoreWindow]].
+
+
+
+==== sdl2:window
+
+sdl2:window is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_CreateWindow|SDL_Window]] struct.
+
+
+<procedure>(window? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:window.
+
+
+<procedure>(window-bordered? window) → boolean</procedure>
+<setter>(set! (window-bordered? window) bordered)</setter>
+<setter>(window-bordered-set! window bordered)</setter>
+
+Get or set whether the window has a border (window decoration).
+#t means the window has a border, #f means the window is borderless.
+
+Setting this to #f has essentially the same effect as passing the {{'borderless}} flag to {{create-window!}} when creating the window.
+
+See [[https://wiki.libsdl.org/SDL_SetWindowBordered|SDL_SetWindowBordered]].
+
+
+<procedure>(window-brightness window) → float</procedure>
+<setter>(set! (window-brightness window) brightness)</setter>
+<setter>(window-brightness-set! window brightness)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowBrightness|SDL_GetWindowBrightness]]
+and [[https://wiki.libsdl.org/SDL_SetWindowBrightness|SDL_SetWindowBrightness]].
+
+The setters signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(window-display-index window) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowDisplayIndex|SDL_GetWindowDisplayIndex]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(window-display-mode window) → sdl2:display-mode</procedure>
+<setter>(set! (window-display-mode window) display-mode)</setter>
+<setter>(window-display-mode-set! window display-mode)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowDisplayMode|SDL_GetWindowDisplayMode]]
+and [[https://wiki.libsdl.org/SDL_SetWindowDisplayMode|SDL_SetWindowDisplayMode]].
+
+These procedures signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(window-flags window) → list of symbols</procedure>
+<procedure>(window-flags-raw window) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowFlags|SDL_GetWindowFlags]].
+
+* {{window-flags}} returns a list of [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#window-flags|window flag symbols]].
+* {{window-flags-raw}} returns an integer bitfield.
+
+
+<procedure>(window-fullscreen window) → symbol or #f</procedure>
+<setter>(set! (window-fullscreen window) mode)</setter>
+<setter>(window-fullscreen-set! window mode)</setter>
+
+Get or set the sdl2:window's fullscreen mode.
+See [[https://wiki.libsdl.org/SDL_SetWindowFullscreen|SDL_SetWindowFullscreen]].
+
+{{window-fullscreen}} returns one of the following values:
+
+* {{'fullscreen}} means "real" fullscreen mode
+* {{'fullscreen-desktop}} means "fake" fullscreen mode that takes the size of the desktop
+* {{#f}} means windowed (non-fullscreen) mode
+
+The setters accept any of the above values, or #t (which means the same as {{'fullscreen}}), or an equivalent integer value.
+
+The setters signal an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(window-grab? window) → boolean</procedure>
+<setter>(set! (window-grab? window) grab?)</setter>
+<setter>(window-grab-set! window grab?)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowGrab|SDL_GetWindowGrab]]
+and [[https://wiki.libsdl.org/SDL_SetWindowGrab|SDL_SetWindowGrab]].
+
+
+<setter>(window-icon-set! window icon-surface)</setter>
+
+See [[https://wiki.libsdl.org/SDL_SetWindowIcon|SDL_SetWindowIcon]].
+
+
+<procedure>(window-id window) → fixnum</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowID|SDL_GetWindowID]].
+
+
+<procedure>(window-maximum-size window) → [width height]</procedure>
+<setter>(set! (window-maximum-size window) size)</setter>
+<setter>(window-maximum-size-set! window size)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowMaximumSize|SDL_GetWindowMaximumSize]]
+and [[https://wiki.libsdl.org/SDL_SetWindowMaximumSize|SDL_SetWindowMaximumSize]].
+
+{{window-maximum-size}} returns multiple values.
+
+The setters accept a list of integers {{(width height)}}.
+
+
+<procedure>(window-minimum-size window) → [width height]</procedure>
+<setter>(set! (window-minimum-size window) size)</setter>
+<setter>(window-minimum-size-set! window size)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowMinimumSize|SDL_GetWindowMinimumSize]]
+and [[https://wiki.libsdl.org/SDL_SetWindowMinimumSize|SDL_SetWindowMinimumSize]].
+
+{{window-minimum-size}} returns multiple values.
+
+The setters accept a list of integers {{(width height)}}.
+
+
+<procedure>(window-pixel-format window) → symbol</procedure>
+<procedure>(window-pixel-format-raw window) → fixnum</procedure>
+
+Returns a symbol or integer indicating the given window's pixel format.
+See [[https://wiki.libsdl.org/SDL_GetWindowPixelFormat|SDL_GetWindowPixelFormat]].
+
+* {{window-pixel-format}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#pixel-formats|pixel format symbol]].
+* {{window-pixel-format-raw}} returns an integer.
+
+
+<procedure>(window-position window) → [x y]</procedure>
+<setter>(set! (window-position window) pos)</setter>
+<setter>(window-position-set! window pos)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowPosition|SDL_GetWindowPosition]]
+and [[https://wiki.libsdl.org/SDL_SetWindowPosition|SDL_SetWindowPosition]].
+
+{{window-position}} returns multiple values.
+
+The setters accept a list of integers {{(x y)}}.
+
+
+<procedure>(window-size window) → [width height]</procedure>
+<setter>(set! (window-size window) size)</setter>
+<setter>(window-size-set! window size)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowSize|SDL_GetWindowSize]]
+and [[https://wiki.libsdl.org/SDL_SetWindowSize|SDL_SetWindowSize]].
+
+{{window-size}} returns multiple values.
+
+The setters accept a list of integers {{(width height)}}.
+
+
+<procedure>(window-surface window) → sdl2:surface</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowSurface|SDL_GetWindowSurface]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(window-title window) → string</procedure>
+<setter>(set! (window-title window) title)</setter>
+<setter>(window-title-set! window title)</setter>
+
+See [[https://wiki.libsdl.org/SDL_GetWindowTitle|SDL_GetWindowTitle]]
+and [[https://wiki.libsdl.org/SDL_SetWindowTitle|SDL_SetWindowTitle]].
+
+
+
+==== sdl2:display-mode
+
+sdl2:display-mode is a record type that wraps a pointer to an
+[[https://wiki.libsdl.org/SDL_DisplayMode|SDL_DisplayMode]] struct.
+
+
+<procedure>(display-mode? obj) → boolean</procedure>
+
+Returns #t if {{obj}} is an sdl2:display-mode.
+
+
+<procedure>(make-display-mode #!optional format w h refresh-rate) → sdl2:display-mode</procedure>
+<procedure>(make-display-mode* #!optional format w h refresh-rate) → sdl2:display-mode</procedure>
+
+Allocate and initialize a new sdl2:display-mode.
+
+{{format}} defaults to {{'unknown}}. It must be a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#pixel-formats|pixel format symbol]] or equivalent integer.
+
+{{w}}, {{h}}, and {{refresh-rate}} default to 0. They must be integers.
+
+* {{make-display-mode}} returns a managed sdl2:display-mode.
+* {{make-display-mode*}} returns an unmanaged sdl2:display-mode, which must be freed with {{free-display-mode!}} when you are done with it.
+
+
+<procedure>(free-display-mode! display-mode)</procedure>
+
+Free the memory of the sdl2:display-mode's underlying struct.
+{{display-mode}}'s pointer will be set to null (see {{struct-null?}}).
+It is safe to call this procedure with managed or unmanaged
+sdl2:display-modes. It is safe (but has no effect) to free a struct
+record multiple times.
+
+
+<procedure>(display-mode-format display-mode) → symbol</procedure>
+<procedure>(display-mode-format-raw display-mode) → fixnum</procedure>
+<setter>(set! (display-mode-format display-mode) val)</setter>
+<setter>(display-mode-format-set! display-mode val)</setter>
+
+Get or set the sdl2:display-mode's "format" field.
+
+* {{display-mode-format}} returns a [[https://gitlab.com/chicken-sdl2/chicken-sdl2/blob/master/docs/enums.md#pixel-formats|pixel format symbol]].
+* {{display-mode-format-raw}} returns an integer.
+* The setters accept either a symbol or an integer.
+
+
+<procedure>(display-mode-w display-mode) → fixnum</procedure>
+<setter>(set! (display-mode-w display-mode) val)</setter>
+<setter>(display-mode-w-set! display-mode val)</setter>
+
+Get or set the sdl2:display-mode's "w" field, as an integer.
+
+
+<procedure>(display-mode-h display-mode) → fixnum</procedure>
+<setter>(set! (display-mode-h display-mode) val)</setter>
+<setter>(display-mode-h-set! display-mode val)</setter>
+
+Get or set the sdl2:display-mode's "h" field, as an integer.
+
+
+<procedure>(display-mode-refresh-rate display-mode) → fixnum</procedure>
+<setter>(set! (display-mode-refresh-rate display-mode) val)</setter>
+<setter>(display-mode-refresh-rate-set! display-mode val)</setter>
+
+Get or set the sdl2:display-mode's "refresh-rate" field, as an integer.
+
+
+
+=== Miscellaneous
+
+<procedure>(clear-error!)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_ClearError|SDL_ClearError]].
+
+
+<procedure>(get-error) → string</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetError|SDL_GetError]].
+
+
+<procedure>(set-error! message)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_SetError|SDL_SetError]].
+
+Unlike SDL_SetError, this procedure only accepts one argument, a
+string. You can use {{sprintf}} to do string substitution if desired.
+
+
+<procedure>(get-platform) → string</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetPlatform|SDL_GetPlatform]].
+
+
+<procedure>(screen-saver-enabled?) → boolean</procedure>
+<setter>(set! (screen-saver-enabled?) enabled?)</setter>
+<setter>(screen-saver-enabled-set! enabled?)</setter>
+
+See [[https://wiki.libsdl.org/SDL_IsScreenSaverEnabled|SDL_IsScreenSaverEnabled]],
+[[https://wiki.libsdl.org/SDL_EnableScreenSaver|SDL_EnableScreenSaver]],
+and [[https://wiki.libsdl.org/SDL_DisableScreenSaver|SDL_DisableScreenSaver]].
+
+
+<procedure>(has-clipboard-text?) → boolean</procedure>
+
+See [[https://wiki.libsdl.org/SDL_HasClipboardText|SDL_HasClipboardText]].
+
+
+<procedure>(get-clipboard-text) → string</procedure>
+
+See [[https://wiki.libsdl.org/SDL_GetClipboardText|SDL_GetClipboardText]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
+
+
+<procedure>(set-clipboard-text! text)</procedure>
+
+See [[https://wiki.libsdl.org/SDL_SetClipboardText|SDL_SetClipboardText]].
+
+Signals an exception of kind {{(exn sdl2)}} if an error occurs.
