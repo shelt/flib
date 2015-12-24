@@ -10,8 +10,8 @@
 (load "activities/splash-activity.scm")
 (load "activities/mainmenu-activity.scm")
 
-(printf "## Autocracy v0.1a ##")
-(printf "Running with SDL ~A~N" (sdl2:current-version))
+(printf "## Autocracy v0.1a ##\n")
+(printf "Running with SDL ~A~N\n" (sdl2:current-version))
 
 ;;; Initialize SDL parts
 (sdl2:set-main-ready!)
@@ -39,3 +39,5 @@
 
 (splash-activity window)
 (mainmenu-activity window)
+(printf "\n* Exiting without error! :)\n")
+(exit)
