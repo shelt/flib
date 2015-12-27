@@ -1,9 +1,4 @@
 ## TODO ##
-- sdl2event must be passed to the instance draw procedures
-- how do we do subclassing, so that (draw) is like an abstract method and the dispatcher can adhere to DRY
-- Do x,y,surface need to be publicly accessible? Because if not, they don't even ..
-
-
-
-(make-simple-button x y surface onpress)
-(make-
+- Map generation
+- Map element (with path as parameter)
+- Game GUI

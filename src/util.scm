@@ -12,3 +12,11 @@
         (rw (sdl2:rect-w rect))
         (rh (sdl2:rect-h rect)))
     (and (> x rx) (< x (+ rx rw)) (> y ry) (< y (+ ry rh)))))
+
+
+
+(define (util:draw-elements! elements surface ev)
+  (if (not (null? elements))
+    (let ()
+      ((car elements) 'draw surface ev)
+      (util:draw-elements! (cdr elements) surface ev))))

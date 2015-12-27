@@ -1,9 +1,10 @@
+;TODO modify from mainmenu activity
 (define (mainmenu-activity window)
   (let* ((window-surface (sdl2:window-surface window)))
 
     (define (draw-scene! elements ev)
       (util:clear-surface window-surface)
-      (util:draw-elements! elements window-surface ev)
+      (util:draw-elements! elements ev)
       (sdl2:update-window-surface! window))
 
     (define drawables (list
