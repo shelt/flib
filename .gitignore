@@ -1,3 +1,13 @@
 *.pyc
 *.sw[ponm]
 *~
+
+bin/
+
+# Scheme library object files
+*.setup-info
+*.types
+*.so
+*.so.*
+*.o
+
