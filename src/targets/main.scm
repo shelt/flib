@@ -9,14 +9,7 @@
 (declare (uses activities/splash))
 (declare (uses activities/mainmenu))
 
-; OLD
-;(load "util.scm")
-;(load "const.scm")
-;(load "objects/ui-obj.scm")
-;(load "activities/splash-activity.scm")
-;(load "activities/mainmenu-activity.scm")
-
-(printf "## Autocracy v0.1a ##\n")
+(printf "## Flib v0.1a ##\n")
 (printf "Running with SDL ~A~N\n" (sdl2:current-version))
 
 ;;; Initialize SDL parts
@@ -37,7 +30,7 @@
 ;;; Create window
 (define window
   (sdl2:create-window!
-   "Autocracy"                          ; title
+   "Flib - Untitled"                    ; title
    'centered  100                       ; x, y
    800  600                             ; w, h
    '(resizable fullscreen-desktop borderless)))                 ; flags
@@ -45,5 +38,5 @@
 
 (splash-activity window)
 (mainmenu-activity window)
-(printf "\n* Exiting without error! :)\n")
+(printf "\n* Exiting without error.\n")
 (exit)

@@ -12,7 +12,7 @@
 (declare (uses activities/splash))
 (declare (uses activities/mainmenu))
 
-(printf "## Autocracy v0.1a ##\n")
+(printf "## Flib v0.1a ##\n")
 (printf "Running with SDL ~A~N\n" (sdl2:current-version))
 
 ;;; Initialize SDL parts
@@ -33,7 +33,7 @@
 ;;; Create window
 (define window
   (sdl2:create-window!
-   "Autocracy"                          ; title
+   "Flib"                          ; title
    'centered  100                       ; x, y
    800  600                             ; w, h
    '(resizable fullscreen-desktop borderless)))                 ; flags
