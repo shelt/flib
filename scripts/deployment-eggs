@@ -1,0 +1,17 @@
+#!/bin/bash
+
+export SDL2_FLAGS=`sdl2-config --cflags --libs`
+
+ROOT=${PWD}
+
+mkdir ${ROOT}/build/deploy
+
+for pkg in $@; do
+
+cd ${pkg}
+sudo chicken-install -deploy -prefix ${ROOT}/build/deploy
+cd ${ROOT}
+
+done
+
+

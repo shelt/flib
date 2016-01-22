@@ -1,14 +1,16 @@
+;TODO unused
+
 (require-extension sdl2)
 
 (use (prefix sdl2 sdl2:)
      (prefix sdl2-image img:)
      miscmacros)
 
-(load "util.scm")
-(load "const.scm")
-(load "objects/ui-obj.scm")
-(load "activities/splash-activity.scm")
-(load "activities/mainmenu-activity.scm")
+(declare (uses util))
+(declare (uses const))
+(declare (uses objects/ui))
+(declare (uses activities/splash))
+(declare (uses activities/mainmenu))
 
 (printf "## Autocracy v0.1a ##\n")
 (printf "Running with SDL ~A~N\n" (sdl2:current-version))

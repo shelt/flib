@@ -1,3 +1,8 @@
+(declare (unit activities/splash))
+(use (prefix sdl2 sdl2:)
+     (prefix sdl2-image img:)
+     miscmacros)
+
 (require-extension posix)
 
 (define (splash-activity window)

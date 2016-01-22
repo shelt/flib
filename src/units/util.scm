@@ -1,3 +1,9 @@
+(declare (unit util))
+
+(use (prefix sdl2 sdl2:)
+     (prefix sdl2-image img:)
+     miscmacros)
+
 ; TODO are these center procedures really necessary?
 (define (util:surface-cx surface) (/ (sdl2:surface-w surface) 2))
 
@@ -11,6 +17,18 @@
         (ry (sdl2:rect-y rect))
         (rw (sdl2:rect-w rect))
         (rh (sdl2:rect-h rect)))
+        (display rx)
+        (printf "\n")
+        (display ry)
+        (printf "\n")
+        (display rw)
+        (printf "\n")
+        (display rh)
+        (printf "\n")
+        (display x)
+        (printf "\n")
+        (display y)
+        (printf "\n");TODO remove debugging
     (and (> x rx) (< x (+ rx rw)) (> y ry) (< y (+ ry rh)))))
 
 

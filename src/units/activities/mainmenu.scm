@@ -1,10 +1,14 @@
-;TODO modify from mainmenu activity
+(declare (unit activities/mainmenu))
+(use (prefix sdl2 sdl2:)
+     (prefix sdl2-image img:)
+     miscmacros)
+
 (define (mainmenu-activity window)
   (let* ((window-surface (sdl2:window-surface window)))
 
     (define (draw-scene! elements ev)
       (util:clear-surface window-surface)
-      (util:draw-elements! elements ev)
+      (util:draw-elements! elements window-surface ev)
       (sdl2:update-window-surface! window))
 
     (define drawables (list
