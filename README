@@ -1,4 +1,14 @@
-## TODO ##
+# Flib
+### Functional game library
+
+A high-level game library written in Scheme.
+
+## What is Scheme?
+
+Scheme is a lisp.
+
+
+## Tasks ##
 - Map generation
 - Map element (with path as parameter)
 - Game GUI
