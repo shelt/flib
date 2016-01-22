@@ -147,6 +147,7 @@ Here is a simple way to ensure that {{quit!}} is called before your program ends
 
 == Version History
 
+; 0.1.1 (2015-12-22) : Fixed a compile error when compiling with GCC 4.
 ; 0.1.0 (2015-12-19) : Initial release.
 
 For more information about what changed in each version,

@@ -3,7 +3,7 @@
 [CHICKEN Scheme](http://call-cc.org/) bindings to
 [Simple DirectMedia Layer](http://libsdl.org/) 2 (SDL2).
 
-- Version:     0.1.0 (2015-12-19)
+- Version:     0.1.1 (2015-12-22)
 - Project:     https://gitlab.com/chicken-sdl2/chicken-sdl2
 - Issues:      https://gitlab.com/chicken-sdl2/chicken-sdl2/issues
 - API Docs:    http://api.call-cc.org/doc/sdl2

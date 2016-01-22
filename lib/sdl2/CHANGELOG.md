@@ -12,6 +12,14 @@ After version 1.0.0 is released, the API is guaranteed to remain stable (no back
 until the next new major version (e.g. going from version 1.x to 2.0.0, or 2.x to 3.0.0).
 
 
+# 0.1.1 (2015-12-22)
+
+- Fixed a compile error when compiling with GCC 4:
+  "‘for’ loop initial declarations are only allowed in C99 mode".
+  Thanks to Evan Hanson for reporting this issue.
+  \[[#29](https://gitlab.com/chicken-sdl2/chicken-sdl2/issues/29)\]
+
+
 # 0.1.0 (2015-12-19)
 
 Initial release. The following procedures were included:
